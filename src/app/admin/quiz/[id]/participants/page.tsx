@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { PageLoader } from '@/components/ui/loader';
+import { Download } from 'lucide-react';
+import { generateBulkResultsPDF } from '@/lib/pdfUtils';
 
 interface QuizSubmission {
   _id: string;
@@ -14,6 +16,8 @@ interface QuizSubmission {
   totalQuestions: number;
   percentage: number;
   submittedAt: string;
+  timeSpent?: number;
+  wasAutoSubmitted?: boolean;
   results: {
     questionIndex: number;
     questionText: string;
@@ -91,6 +95,28 @@ export default function QuizParticipantsPage() {
     return 'bg-red-100';
   };
 
+  const handleDownloadBulkPDF = () => {
+    if (!data?.submissions || data.submissions.length === 0) return;
+    
+    const bulkData = {
+      quizTitle: data.quiz.title,
+      schoolName: data.quiz.schoolName,
+      teacherName: data.quiz.teacherName,
+      major: data.quiz.major,
+      totalQuestions: data.submissions[0]?.totalQuestions || 0,
+      students: data.submissions.map(submission => ({
+        userName: submission.userName,
+        score: submission.score,
+        totalQuestions: submission.totalQuestions,
+        percentage: submission.percentage,
+        results: submission.results,
+        timeSpent: submission.timeSpent,
+      })),
+    };
+    
+    generateBulkResultsPDF(bulkData, 'en'); // You can make this dynamic based on admin language preference
+  };
+
   if (isLoading) {
     return <PageLoader text="Loading participants..." />;
   }
@@ -110,7 +136,7 @@ export default function QuizParticipantsPage() {
     );
   }
 
-  const averageScore = data.submissions.length > 0 
+  const averageScore = data?.submissions?.length > 0 
     ? data.submissions.reduce((sum, sub) => sum + sub.percentage, 0) / data.submissions.length 
     : 0;
 
@@ -121,10 +147,19 @@ export default function QuizParticipantsPage() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Quiz Participants</h1>
             <p className="text-gray-600 mt-2">
-              {data.quiz.title} • PIN: <code className="bg-gray-100 px-2 py-1 rounded font-mono">{data.quiz.pin}</code>
+              {data?.quiz?.title} • PIN: <code className="bg-gray-100 px-2 py-1 rounded font-mono">{data?.quiz?.pin}</code>
             </p>
           </div>
           <div className="flex gap-2">
+            {data?.submissions?.length > 0 && (
+              <Button 
+                onClick={handleDownloadBulkPDF}
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download All Results PDF
+              </Button>
+            )}
             <Button variant="outline" onClick={() => router.push('/admin')}>
               Back to Dashboard
             </Button>
@@ -141,7 +176,7 @@ export default function QuizParticipantsPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-blue-600">{data.submissions.length}</div>
+              <div className="text-2xl font-bold text-blue-600">{data?.submissions?.length || 0}</div>
               <div className="text-sm text-gray-600">Total Participants</div>
             </CardContent>
           </Card>
@@ -156,7 +191,7 @@ export default function QuizParticipantsPage() {
           <Card>
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-green-600">
-                {data.submissions.filter(s => s.percentage >= 80).length}
+                {data?.submissions?.filter(s => s.percentage >= 80).length || 0}
               </div>
               <div className="text-sm text-gray-600">Excellent (80%+)</div>
             </CardContent>
@@ -164,7 +199,7 @@ export default function QuizParticipantsPage() {
           <Card>
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-red-600">
-                {data.submissions.filter(s => s.percentage < 60).length}
+                {data?.submissions?.filter(s => s.percentage < 60).length || 0}
               </div>
               <div className="text-sm text-gray-600">Need Improvement (&lt;60%)</div>
             </CardContent>
@@ -174,17 +209,17 @@ export default function QuizParticipantsPage() {
         {/* Participants List */}
         <Card>
           <CardHeader>
-            <CardTitle>All Participants ({data.submissions.length})</CardTitle>
+            <CardTitle>All Participants ({data?.submissions?.length || 0})</CardTitle>
             <CardDescription>
               Click on a participant to view detailed results
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {data.submissions.length === 0 ? (
+            {!data?.submissions || data.submissions.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-600">No participants yet</p>
                 <p className="text-sm text-gray-500 mt-2">
-                  Share the PIN code <code className="bg-gray-100 px-2 py-1 rounded">{data.quiz.pin}</code> with students
+                  Share the PIN code <code className="bg-gray-100 px-2 py-1 rounded">{data?.quiz?.pin}</code> with students
                 </p>
               </div>
             ) : (

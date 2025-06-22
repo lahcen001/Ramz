@@ -35,6 +35,8 @@ export default function QuizPage() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [shuffledQuestions, setShuffledQuestions] = useState<Question[]>([]);
+  const [questionMapping, setQuestionMapping] = useState<number[]>([]); // Maps shuffled index to original index
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
@@ -53,12 +55,46 @@ export default function QuizPage() {
 
     try {
       const parsedQuizData = JSON.parse(storedQuizData);
+      console.log('Quiz data from session:', parsedQuizData);
+      console.log('Quiz language:', parsedQuizData.language);
+      console.log('Current i18n language:', i18n.language);
+      
+      // Shuffle questions for anti-cheating (each user gets different order)
+      const shuffleArray = (array: any[]) => {
+        const indexed = array.map((item, index) => ({ item, originalIndex: index }));
+        for (let i = indexed.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [indexed[i], indexed[j]] = [indexed[j], indexed[i]];
+        }
+        return indexed;
+      };
+      
+      const shuffledIndexedQuestions = shuffleArray(parsedQuizData.questions);
+      const shuffled = shuffledIndexedQuestions.map(item => item.item);
+      const mapping = shuffledIndexedQuestions.map(item => item.originalIndex);
+      
+      console.log('Original question order:', parsedQuizData.questions.map((q: any) => q.text.substring(0, 30) + '...'));
+      console.log('Shuffled question order:', shuffled.map((q: any) => q.text.substring(0, 30) + '...'));
+      console.log('Question mapping (shuffled index -> original index):', mapping);
+      
       setQuizData(parsedQuizData);
+      setShuffledQuestions(shuffled);
+      setQuestionMapping(mapping);
       setUserName(storedUserName);
       setAnswers(new Array(parsedQuizData.questions.length).fill(-1));
       
-      if (parsedQuizData.language && parsedQuizData.language !== i18n.language) {
+      // Force set the teacher's language and update document direction
+      if (parsedQuizData.language) {
+        console.log('Setting language to:', parsedQuizData.language);
         i18n.changeLanguage(parsedQuizData.language);
+        const isRTL = parsedQuizData.language === 'ar';
+        document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
+        document.documentElement.lang = parsedQuizData.language;
+      } else {
+        console.log('No language found in quiz data, defaulting to English');
+        i18n.changeLanguage('en');
+        document.documentElement.dir = 'ltr';
+        document.documentElement.lang = 'en';
       }
       
       if (parsedQuizData.hasTimeLimit && parsedQuizData.timeLimit) {
@@ -70,7 +106,7 @@ export default function QuizPage() {
       setError('Failed to load quiz data');
       router.push('/');
     }
-  }, [router]);
+  }, [router, i18n]);
 
   useEffect(() => {
     if (timeRemaining === null || timeRemaining <= 0) return;
@@ -104,7 +140,7 @@ export default function QuizPage() {
     setSelectedAnswer(null);
     setError('');
 
-    if (currentQuestion < quizData!.questions.length - 1) {
+    if (currentQuestion < shuffledQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
       handleSubmitQuiz(newAnswers);
@@ -128,6 +164,17 @@ export default function QuizPage() {
       timeSpent = Math.floor((Date.now() - quizStartTime) / 1000);
     }
 
+    // Map shuffled answers back to original question order
+    const originalOrderAnswers = new Array(finalAnswers.length).fill(-1);
+    finalAnswers.forEach((answer, shuffledIndex) => {
+      const originalIndex = questionMapping[shuffledIndex];
+      originalOrderAnswers[originalIndex] = answer;
+    });
+    
+    console.log('Shuffled answers:', finalAnswers);
+    console.log('Original order answers:', originalOrderAnswers);
+    console.log('Question mapping used:', questionMapping);
+
     try {
       const response = await fetch(`/api/quizzes/${params.id}/submit`, {
         method: 'POST',
@@ -135,7 +182,7 @@ export default function QuizPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          answers: finalAnswers,
+          answers: originalOrderAnswers,
           userName,
           timeSpent,
           wasAutoSubmitted,
@@ -170,12 +217,12 @@ export default function QuizPage() {
     return 'text-red-600';
   };
 
-  if (!quizData) {
+  if (!quizData || shuffledQuestions.length === 0) {
     return <PageLoader text={t('quiz.loadingQuiz')} />;
   }
 
-  const question = quizData.questions[currentQuestion];
-  const progress = ((currentQuestion + 1) / quizData.questions.length) * 100;
+  const question = shuffledQuestions[currentQuestion];
+  const progress = ((currentQuestion + 1) / shuffledQuestions.length) * 100;
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -211,7 +258,7 @@ export default function QuizPage() {
           {/* Progress Bar */}
           <div className="mt-3">
             <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-              <span>{t('quiz.question')} {currentQuestion + 1} {t('quiz.of')} {quizData.questions.length}</span>
+              <span>{t('quiz.question')} {currentQuestion + 1} {t('quiz.of')} {shuffledQuestions.length}</span>
               <span>{Math.round(progress)}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -223,11 +270,19 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* Question Content - Flexible height */}
+                  {/* Question Content - Flexible height */}
         <div className="flex-1 flex flex-col p-4 overflow-hidden">
           <Card className="flex-1 flex flex-col shadow-xl border-0 bg-white/90 backdrop-blur-sm">
             {/* Question Header */}
             <CardHeader className="flex-shrink-0 pb-3 sm:pb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+                  🔀 {t('quiz.shuffled')}
+                </span>
+                <span className="text-xs text-gray-500">
+                  ID: {question._id.slice(-6)}
+                </span>
+              </div>
               <CardTitle className="text-base sm:text-lg text-gray-900 leading-relaxed">
                 {question.text}
               </CardTitle>
@@ -294,7 +349,7 @@ export default function QuizPage() {
                                               <Loader2 className="w-4 h-4 animate-spin" />
                       {t('quiz.submitting')}
                     </div>
-                  ) : currentQuestion === quizData.questions.length - 1 ? (
+                  ) : currentQuestion === shuffledQuestions.length - 1 ? (
                     <div className="flex items-center gap-2">
                       <Send className="h-4 w-4" />
                       {t('quiz.submit')}

@@ -358,13 +358,23 @@ export default function AdminPage() {
         <div className="flex-1 p-4 lg:p-8 space-y-6 lg:space-y-8 overflow-y-auto">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
             <div className="lg:col-span-2 space-y-4">
-              <Button 
-                onClick={() => router.push('/admin/create')}
-                className="w-full h-14 lg:h-16 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-base lg:text-lg"
-              >
-                <Plus className="h-5 w-5 lg:h-6 lg:w-6 mr-2 lg:mr-3" />
-                {t('admin.dashboard.createNewQuiz')}
-              </Button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
+                <Button 
+                  onClick={() => router.push('/admin/create')}
+                  className="h-14 lg:h-16 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-base lg:text-lg"
+                >
+                  <Plus className="h-5 w-5 lg:h-6 lg:w-6 mr-2 lg:mr-3" />
+                  {t('admin.dashboard.createNewQuiz')}
+                </Button>
+                
+                <Button 
+                  onClick={() => router.push('/admin/classes')}
+                  className="h-14 lg:h-16 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-base lg:text-lg"
+                >
+                  <Users className="h-5 w-5 lg:h-6 lg:w-6 mr-2 lg:mr-3" />
+                  Manage Classes
+                </Button>
+              </div>
 
               <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
                 <DialogTrigger asChild>

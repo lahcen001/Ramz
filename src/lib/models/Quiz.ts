@@ -92,6 +92,10 @@ const QuizSchema = new Schema<IQuiz>({
     enum: ['en', 'ar', 'fr'],
     default: 'en',
   },
+  classId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Class',
+  },
 }, {
   timestamps: true,
 });

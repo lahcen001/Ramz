@@ -18,6 +18,14 @@ export async function GET(
       );
     }
     
+    // Ensure quiz has a language field (for backward compatibility)
+    if (!quiz.language) {
+      quiz.language = 'en';
+    }
+    
+    console.log('Individual quiz data:', quiz);
+    console.log('Individual quiz language:', quiz.language);
+    
     return NextResponse.json({ success: true, data: quiz });
   } catch (error) {
     return NextResponse.json(

@@ -41,6 +41,9 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    console.log('Admin creating quiz:', admin);
+    console.log('Admin language:', admin.language);
+    
     // Generate unique PIN
     let pin;
     let isUnique = false;
@@ -52,12 +55,17 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    const quiz = await Quiz.create({
+    const quizData = {
       ...body,
       pin,
       language: admin.language || 'en', // Save admin's language preference
       createdBy: admin._id,
-    });
+    };
+    
+    console.log('Creating quiz with data:', quizData);
+    console.log('Quiz language being saved:', quizData.language);
+    
+    const quiz = await Quiz.create(quizData);
     
     return NextResponse.json({ success: true, data: quiz }, { status: 201 });
   } catch (error) {

@@ -64,6 +64,7 @@
     "welcome": "مرحباً",
     "question": "السؤال",
     "of": "من",
+    "shuffled": "مخلوط",
     "timeRemaining": "الوقت المتبقي",
     "lessThanMinute": "أقل من دقيقة واحدة متبقية!",
     "previous": "السابق",
@@ -100,7 +101,9 @@
     "correctAnswer": "الإجابة الصحيحة",
     "correct": "صحيح",
     "wrong": "خطأ",
-    "loadingResults": "جاري تحميل النتائج..."
+    "loadingResults": "جاري تحميل النتائج...",
+    "downloadPDF": "تحميل تقرير PDF",
+    "home": "الرئيسية"
   },
   "admin": {
     "title": "لوحة تحكم الإدارة",

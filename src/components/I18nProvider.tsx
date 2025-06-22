@@ -16,8 +16,9 @@ export default function I18nProvider({ children }: I18nProviderProps) {
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
-  // Check if this is a direct quiz link or shared link
+  // Check if this is a direct quiz link, shared link, quiz taking page, or results page
   const isDirectQuizLink = pathname?.startsWith('/join/') || 
+                          pathname?.startsWith('/quiz/') ||
                           pathname?.includes('?pin=') ||
                           (typeof window !== 'undefined' && window.location.search.includes('pin='));
 

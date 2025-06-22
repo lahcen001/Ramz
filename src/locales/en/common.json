@@ -64,6 +64,7 @@
     "welcome": "Welcome",
     "question": "Question",
     "of": "of",
+    "shuffled": "Shuffled",
     "timeRemaining": "Time Remaining",
     "lessThanMinute": "Less than 1 minute left!",
     "previous": "Previous",
@@ -100,7 +101,9 @@
     "correctAnswer": "Correct answer",
     "correct": "Correct",
     "wrong": "Wrong",
-    "loadingResults": "Loading results..."
+    "loadingResults": "Loading results...",
+    "downloadPDF": "Download PDF Report",
+    "home": "Home"
   },
   "admin": {
     "title": "Admin Dashboard",

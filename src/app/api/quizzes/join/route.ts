@@ -24,6 +24,9 @@ export async function POST(request: NextRequest) {
     }
     
     // Return quiz info without correct answers
+    console.log('Quiz from DB:', quiz);
+    console.log('Quiz language from DB:', quiz.language);
+    
     const quizData = {
       _id: quiz._id,
       title: quiz.title,
@@ -40,6 +43,9 @@ export async function POST(request: NextRequest) {
         // Don't include correctAnswerIndex
       })),
     };
+    
+    console.log('Quiz data being returned:', quizData);
+    console.log('Language being returned:', quizData.language);
     
     return NextResponse.json({ success: true, data: quizData });
   } catch (error) {

@@ -64,6 +64,7 @@
     "welcome": "Bienvenue",
     "question": "Question",
     "of": "sur",
+    "shuffled": "Mélangé",
     "timeRemaining": "Temps Restant",
     "lessThanMinute": "Moins d'une minute restante !",
     "previous": "Précédent",
@@ -100,7 +101,9 @@
     "correctAnswer": "Réponse correcte",
     "correct": "Correct",
     "wrong": "Incorrect",
-    "loadingResults": "Chargement des résultats..."
+    "loadingResults": "Chargement des résultats...",
+    "downloadPDF": "Télécharger Rapport PDF",
+    "home": "Accueil"
   },
   "admin": {
     "title": "Tableau de Bord Admin",

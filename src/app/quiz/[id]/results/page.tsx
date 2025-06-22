@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trophy, CheckCircle, XCircle, Eye, EyeOff, RefreshCw, Home } from 'lucide-react';
+import { Trophy, CheckCircle, XCircle, Eye, EyeOff, RefreshCw, Home, Download } from 'lucide-react';
 import { PageLoader } from '@/components/ui/loader';
+import { generateStudentResultPDF } from '@/lib/pdfUtils';
 
 interface QuestionResult {
   questionIndex: number;
@@ -51,8 +52,12 @@ export default function ResultsPage() {
       
       if (storedQuizData) {
         const quizData = JSON.parse(storedQuizData);
-        if (quizData.language && quizData.language !== i18n.language) {
+        // Force set the teacher's language and update document direction
+        if (quizData.language) {
           i18n.changeLanguage(quizData.language);
+          const isRTL = quizData.language === 'ar';
+          document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
+          document.documentElement.lang = quizData.language;
         }
       }
     } catch (err) {
@@ -63,6 +68,22 @@ export default function ResultsPage() {
   const handleNewQuiz = () => {
     sessionStorage.clear();
     router.push('/');
+  };
+
+  const handleDownloadPDF = () => {
+    if (!results) return;
+    
+    generateStudentResultPDF({
+      userName: results.userName,
+      score: results.score,
+      totalQuestions: results.totalQuestions,
+      percentage: results.percentage,
+      results: results.results,
+      quizTitle: results.quizTitle,
+      schoolName: results.schoolName,
+      teacherName: results.teacherName,
+      major: results.major,
+    }, i18n.language);
   };
 
   if (!results) {
@@ -232,23 +253,34 @@ export default function ResultsPage() {
           )}
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-3 pt-4">
+          <div className="space-y-3 pt-4">
+            {/* Download PDF Button */}
             <Button
-              variant="outline"
-              onClick={() => router.push('/')}
-              className="flex items-center justify-center gap-2"
+              onClick={handleDownloadPDF}
+              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 flex items-center justify-center gap-2"
             >
-              <Home className="h-4 w-4" />
-              Home
+              <Download className="h-4 w-4" />
+              {t('results.downloadPDF')}
             </Button>
             
-            <Button
-              onClick={handleNewQuiz}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 flex items-center justify-center gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              New Quiz
-            </Button>
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                onClick={() => router.push('/')}
+                className="flex items-center justify-center gap-2"
+              >
+                <Home className="h-4 w-4" />
+                {t('results.home')}
+              </Button>
+              
+              <Button
+                onClick={handleNewQuiz}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 flex items-center justify-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                {t('results.takeAnother')}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
