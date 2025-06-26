@@ -15,7 +15,11 @@ interface Quiz {
   teacherName: string;
   major: string;
   pin: string;
-  questions: any[];
+  questions: Array<{
+    text: string;
+    answers: string[];
+    correctAnswerIndex: number;
+  }>;
   hasTimeLimit: boolean;
   timeLimit?: number;
 }
@@ -31,7 +35,7 @@ export default function EditQuizPage() {
 
   useEffect(() => {
     fetchQuiz();
-  }, []);
+  }, [fetchQuiz]);
 
   const fetchQuiz = async () => {
     try {
@@ -44,7 +48,7 @@ export default function EditQuizPage() {
       } else {
         setError('Failed to fetch quiz');
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
@@ -96,7 +100,7 @@ export default function EditQuizPage() {
       } else {
         setError(data.error || 'Failed to update quiz');
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Please try again.');
     } finally {
       setIsSubmitting(false);

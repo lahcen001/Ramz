@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -27,7 +27,6 @@ import {
   Save,
   Trash2
 } from 'lucide-react';
-import I18nProvider from '@/components/I18nProvider';
 import { PageLoader } from '@/components/ui/loader';
 import { Loader2 } from 'lucide-react';
 
@@ -35,6 +34,15 @@ interface Question {
   text: string;
   answers: string[];
   correctAnswerIndex: number;
+}
+
+interface CSVQuestion {
+  question: string;
+  answer1: string;
+  answer2: string;
+  answer3: string;
+  answer4: string;
+  correctAnswer: number;
 }
 
 interface QuizForm {
@@ -47,7 +55,7 @@ interface QuizForm {
 }
 
 export default function CreateQuizPage() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const [quizForm, setQuizForm] = useState<QuizForm>({
     title: '',
     schoolName: '',
@@ -69,40 +77,7 @@ export default function CreateQuizPage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    checkAuthentication();
-  }, []);
-
-  useEffect(() => {
-    // Check for imported questions from CSV
-    const urlParams = new URLSearchParams(window.location.search);
-    const imported = urlParams.get('imported');
-    
-    if (imported === 'true') {
-      const importedQuestions = localStorage.getItem('importedQuestions');
-      if (importedQuestions) {
-        try {
-          const csvQuestions = JSON.parse(importedQuestions);
-          const formattedQuestions: Question[] = csvQuestions.map((q: any) => ({
-            text: q.question,
-            answers: [q.answer1, q.answer2, q.answer3, q.answer4],
-            correctAnswerIndex: q.correctAnswer
-          }));
-          
-          setQuestions(formattedQuestions);
-          localStorage.removeItem('importedQuestions'); // Clean up
-          
-          // Show success message
-          setSuccess(`Successfully imported ${formattedQuestions.length} questions from CSV!`);
-          setTimeout(() => setSuccess(''), 5000);
-        } catch (err) {
-          setError('Error loading imported questions');
-        }
-      }
-    }
-  }, []);
-
-  const checkAuthentication = async () => {
+  const checkAuthentication = useCallback(async () => {
     try {
       const response = await fetch('/api/auth/admin');
       const data = await response.json();
@@ -129,12 +104,45 @@ export default function CreateQuizPage() {
       } else {
         router.push('/admin/login');
       }
-    } catch (err) {
+    } catch {
       router.push('/admin/login');
     } finally {
       setCheckingAuth(false);
     }
-  };
+  }, [i18n, router]);
+
+  useEffect(() => {
+    checkAuthentication();
+  }, [checkAuthentication]);
+
+  useEffect(() => {
+    // Check for imported questions from CSV
+    const urlParams = new URLSearchParams(window.location.search);
+    const imported = urlParams.get('imported');
+    
+    if (imported === 'true') {
+      const importedQuestions = localStorage.getItem('importedQuestions');
+      if (importedQuestions) {
+        try {
+          const csvQuestions = JSON.parse(importedQuestions);
+          const formattedQuestions: Question[] = csvQuestions.map((q: CSVQuestion) => ({
+            text: q.question,
+            answers: [q.answer1, q.answer2, q.answer3, q.answer4],
+            correctAnswerIndex: q.correctAnswer
+          }));
+          
+          setQuestions(formattedQuestions);
+          localStorage.removeItem('importedQuestions'); // Clean up
+          
+          // Show success message
+          setSuccess(`Successfully imported ${formattedQuestions.length} questions from CSV!`);
+          setTimeout(() => setSuccess(''), 5000);
+        } catch {
+          setError('Error loading imported questions');
+        }
+      }
+    }
+  }, []);
 
   const handleQuizFormChange = (field: keyof QuizForm, value: string | boolean | number) => {
     setQuizForm(prev => ({ ...prev, [field]: value }));
@@ -238,7 +246,7 @@ export default function CreateQuizPage() {
       } else {
         setError(data.error || 'Failed to create quiz');
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Please try again.');
     } finally {
       setIsSubmitting(false);

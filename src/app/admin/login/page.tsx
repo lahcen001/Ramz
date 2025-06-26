@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, Lock, ArrowRight, Home, User, Globe, School, GraduationCap, Clock } from 'lucide-react';
+import { Shield, Lock, ArrowRight, Home, User, Globe } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { Loader2 } from 'lucide-react';
 
@@ -36,7 +36,7 @@ export default function AdminLoginPage() {
     setFormData(prev => ({ ...prev, language: i18n.language }));
   }, [i18n.language]);
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | boolean | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setError('');
   };
@@ -104,7 +104,7 @@ export default function AdminLoginPage() {
       } else {
         setError(data.error || (isLogin ? t('admin.auth.loginFailed') : t('admin.auth.registrationFailed')));
       }
-    } catch (err) {
+    } catch {
       setError(t('home.errors.networkError'));
     } finally {
       setIsLoading(false);

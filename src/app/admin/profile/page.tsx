@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User, Globe, School, GraduationCap, Clock, ArrowLeft, Save, Settings } from 'lucide-react';
+import { User, Globe, ArrowLeft, Save, Settings } from 'lucide-react';
 import { PageLoader } from '@/components/ui/loader';
 import { Loader2 } from 'lucide-react';
 
@@ -46,11 +46,7 @@ export default function AdminProfilePage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    checkAuthentication();
-  }, []);
-
-  const checkAuthentication = async () => {
+  const checkAuthentication = useCallback(async () => {
     try {
       const response = await fetch('/api/auth/admin');
       const data = await response.json();
@@ -76,15 +72,19 @@ export default function AdminProfilePage() {
       } else {
         router.push('/admin/login');
       }
-    } catch (err) {
+    } catch {
       router.push('/admin/login');
     } finally {
       setCheckingAuth(false);
       setIsLoading(false);
     }
-  };
+  }, [i18n, router]);
 
-  const handleInputChange = (field: string, value: any) => {
+  useEffect(() => {
+    checkAuthentication();
+  }, [checkAuthentication]);
+
+  const handleInputChange = (field: string, value: string | boolean | number) => {
     setProfileData(prev => ({ ...prev, [field]: value }));
     setError('');
     setSuccess('');
@@ -127,7 +127,7 @@ export default function AdminProfilePage() {
       } else {
         setError(data.error || t('admin.profile.updateFailed'));
       }
-    } catch (err) {
+    } catch {
       setError(t('home.errors.networkError'));
     } finally {
       setIsSaving(false);

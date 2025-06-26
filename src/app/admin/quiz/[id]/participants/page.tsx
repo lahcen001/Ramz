@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -51,11 +51,7 @@ export default function QuizParticipantsPage() {
   const router = useRouter();
   const params = useParams();
 
-  useEffect(() => {
-    fetchParticipants();
-  }, []);
-
-  const fetchParticipants = async () => {
+  const fetchParticipants = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch(`/api/quizzes/${params.id}/submissions`);
@@ -66,12 +62,16 @@ export default function QuizParticipantsPage() {
       } else {
         setError('Failed to fetch participants');
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [params.id]);
+
+  useEffect(() => {
+    fetchParticipants();
+  }, [fetchParticipants]);
 
   const toggleSubmissionDetails = (submissionId: string) => {
     const newExpanded = new Set(expandedSubmissions);
@@ -89,11 +89,7 @@ export default function QuizParticipantsPage() {
     return 'text-red-600';
   };
 
-  const getScoreBgColor = (percentage: number) => {
-    if (percentage >= 80) return 'bg-green-100';
-    if (percentage >= 60) return 'bg-yellow-100';
-    return 'bg-red-100';
-  };
+
 
   const handleDownloadBulkPDF = () => {
     if (!data?.submissions || data.submissions.length === 0) return;
@@ -114,7 +110,7 @@ export default function QuizParticipantsPage() {
       })),
     };
     
-    generateBulkResultsPDF(bulkData, 'en'); // You can make this dynamic based on admin language preference
+    generateBulkResultsPDF(bulkData);
   };
 
   if (isLoading) {

@@ -9,7 +9,7 @@ export async function GET() {
     await dbConnect();
     const quizzes = await Quiz.find({}).select('-questions.correctAnswerIndex');
     return NextResponse.json({ success: true, data: quizzes });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Failed to fetch quizzes' },
       { status: 500 }

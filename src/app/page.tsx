@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -9,46 +9,28 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { BookOpen, Users, Trophy, Clock, Globe, ArrowRight, Sparkles, Target, Link } from 'lucide-react';
+import { Target, Users, BookOpen, Clock, Pin, Link, ArrowRight } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 
 export default function Home() {
   const { t, i18n } = useTranslation();
-  const [userName, setUserName] = useState('');
   const [pin, setPin] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [name, setName] = useState('');
+  const [isJoining, setIsJoining] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Auto-populate PIN from URL parameter
-  useEffect(() => {
-    const pinFromUrl = searchParams.get('pin');
-    if (pinFromUrl) {
-      setPin(pinFromUrl.toUpperCase());
-    }
-  }, [searchParams]);
-
-  // Auto-submit when user enters name and PIN is from URL
-  useEffect(() => {
-    const pinFromUrl = searchParams.get('pin');
-    if (pinFromUrl && userName.trim() && !isLoading) {
-      const timer = setTimeout(() => {
-        handleJoinQuiz(new Event('submit') as any);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [userName, searchParams, isLoading]);
-
-  const handleJoinQuiz = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleJoinQuiz = useCallback(async (joinPin?: string, joinName?: string) => {
+    const quizPin = joinPin || pin;
+    const userName = joinName || name;
     
-    if (!userName.trim() || !pin.trim()) {
-      setError(t('home.errors.nameAndPinRequired'));
+    if (!quizPin.trim() || !userName.trim()) {
+      setError(t('home.errors.fillAllFields'));
       return;
     }
 
-    setIsLoading(true);
+    setIsJoining(true);
     setError('');
 
     try {
@@ -58,7 +40,7 @@ export default function Home() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          pin: pin.trim(),
+          pin: quizPin.trim().toUpperCase(),
           userName: userName.trim(),
         }),
       });
@@ -66,23 +48,32 @@ export default function Home() {
       const data = await response.json();
 
       if (data.success) {
-        sessionStorage.setItem('userName', userName.trim());
-        sessionStorage.setItem('quizData', JSON.stringify(data.data));
-        
+        // Set language from teacher's selection
         if (data.data.language && data.data.language !== i18n.language) {
           await i18n.changeLanguage(data.data.language);
         }
         
-        router.push(`/quiz/${data.data._id}`);
+        router.push(`/quiz/${data.data.quizId}?name=${encodeURIComponent(userName.trim())}`);
       } else {
-        setError(data.error || 'Failed to join quiz');
+        setError(data.error || t('home.errors.failedToJoin'));
       }
-    } catch (err) {
+    } catch {
       setError(t('home.errors.networkError'));
     } finally {
-      setIsLoading(false);
+      setIsJoining(false);
     }
-  };
+  }, [pin, name, t, i18n, router]);
+
+  useEffect(() => {
+    const urlPin = searchParams.get('pin');
+    const urlName = searchParams.get('name');
+    
+    if (urlPin && urlName) {
+      setPin(urlPin);
+      setName(urlName);
+      handleJoinQuiz(urlPin, urlName);
+    }
+  }, [searchParams, handleJoinQuiz]);
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -128,7 +119,7 @@ export default function Home() {
             </CardHeader>
             
             <CardContent className="space-y-4 sm:space-y-6">
-              <form onSubmit={handleJoinQuiz} className="space-y-4 sm:space-y-6">
+              <form onSubmit={() => handleJoinQuiz(pin, name)} className="space-y-4 sm:space-y-6">
                 {/* Shared link info - Compact for mobile */}
                 {searchParams.get('pin') && (
                   <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
@@ -149,9 +140,9 @@ export default function Home() {
                     id="userName"
                     type="text"
                     placeholder={t('home.yourNamePlaceholder')}
-                    value={userName}
-                    onChange={(e) => setUserName(e.target.value)}
-                    disabled={isLoading}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    disabled={isJoining}
                     className="h-12 sm:h-14 text-lg sm:text-xl border-2 focus:border-blue-500 transition-colors rtl:text-right rtl:placeholder:text-right"
                     autoFocus={searchParams.get('pin') ? true : false}
                   />
@@ -169,7 +160,7 @@ export default function Home() {
                       placeholder={t('home.quizPinPlaceholder')}
                       value={pin}
                       onChange={(e) => setPin(e.target.value.toUpperCase())}
-                      disabled={isLoading}
+                      disabled={isJoining}
                       className="h-12 sm:h-14 text-lg sm:text-xl border-2 focus:border-blue-500 transition-colors font-mono tracking-wider text-center"
                       maxLength={6}
                     />
@@ -188,10 +179,10 @@ export default function Home() {
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  disabled={isLoading || !userName.trim() || !pin.trim()}
+                  disabled={isJoining || !name.trim() || !pin.trim()}
                   className="w-full h-12 sm:h-14 text-lg sm:text-xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50"
                 >
-                  {isLoading ? (
+                  {isJoining ? (
                     <div className="flex items-center gap-2">
                       <Loader2 className="w-5 h-5 animate-spin" />
                       {t('common.loading')}

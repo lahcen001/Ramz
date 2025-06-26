@@ -40,50 +40,38 @@ export default function JoinQuizPage() {
   const [quizInfo, setQuizInfo] = useState<QuizInfo | null>(null);
 
   const fetchQuizInfo = useCallback(async () => {
-    if (!params.id) return;
-
     try {
-      setIsLoading(true);
       const response = await fetch(`/api/quizzes/${params.id}`);
       const data = await response.json();
-
+      
       if (data.success) {
         setQuizInfo(data.data);
+        
+        // Set language from quiz
         if (data.data.language && data.data.language !== i18n.language) {
           await i18n.changeLanguage(data.data.language);
         }
       } else {
-        setError(data.error || t('join.quizNotFound'));
+        setError('Quiz not found');
       }
-    } catch (err) {
-      setError(t('home.errors.networkError'));
+    } catch {
+      setError('Failed to load quiz information');
     } finally {
       setIsLoading(false);
     }
-  }, [params.id, t, i18n]);
+  }, [params.id, i18n]);
 
   useEffect(() => {
-    fetchQuizInfo();
-  }, [fetchQuizInfo]);
-
-  useEffect(() => {
-    if (quizInfo && userName.trim() && !isSubmitting && !isLoading) {
-      const timer = setTimeout(() => {
-        handleJoinQuiz();
-      }, 800);
-      return () => clearTimeout(timer);
+    if (params.id) {
+      fetchQuizInfo();
     }
-  }, [userName, quizInfo, isSubmitting, isLoading]);
+  }, [params.id, fetchQuizInfo]);
 
-  const handleJoinQuiz = async () => {
-    if (!userName.trim() || !quizInfo) {
-      setError(t('home.errors.nameRequired'));
-      return;
-    }
-
+  const handleJoinQuiz = useCallback(async () => {
+    if (!userName.trim() || !quizInfo) return;
+    
     setIsSubmitting(true);
-    setError('');
-
+    
     try {
       const response = await fetch('/api/quizzes/join', {
         method: 'POST',
@@ -96,21 +84,31 @@ export default function JoinQuizPage() {
         }),
       });
 
-      const result = await response.json();
+      const data = await response.json();
 
-      if (result.success && result.data) {
+      if (data.success) {
         sessionStorage.setItem('userName', userName.trim());
-        sessionStorage.setItem('quizData', JSON.stringify(result.data));
-        router.push(`/quiz/${result.data._id}`);
+        sessionStorage.setItem('quizData', JSON.stringify(data.data));
+        router.push(`/quiz/${data.data._id}`);
       } else {
-        setError(result.error || 'Failed to join quiz');
+        setError(data.error || 'Failed to join quiz');
+        setIsSubmitting(false);
       }
-    } catch (err) {
-      setError(t('home.errors.networkError'));
-    } finally {
+    } catch {
+      setError('Network error. Please try again.');
       setIsSubmitting(false);
     }
-  };
+  }, [userName, quizInfo, router]);
+
+  useEffect(() => {
+    if (userName.length > 0) {
+      const timer = setTimeout(() => {
+        handleJoinQuiz();
+      }, 800);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [userName, handleJoinQuiz]);
 
   const handleRetry = () => {
     setError('');

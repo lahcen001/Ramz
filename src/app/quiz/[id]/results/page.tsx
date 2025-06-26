@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trophy, CheckCircle, XCircle, Eye, EyeOff, RefreshCw, Home, Download } from 'lucide-react';
 import { PageLoader } from '@/components/ui/loader';
-import { generateStudentResultPDF } from '@/lib/pdfUtils';
+import { generateResultsPDF } from '@/lib/pdfUtils';
 
 interface QuestionResult {
   questionIndex: number;
@@ -29,41 +29,52 @@ interface QuizResults {
   schoolName: string;
   teacherName: string;
   major: string;
+  timeSpent: number;
+  quiz: {
+    title: string;
+    schoolName: string;
+    teacherName: string;
+    major: string;
+  };
 }
 
-export default function ResultsPage() {
+export default function QuizResultsPage() {
   const { t, i18n } = useTranslation();
   const [results, setResults] = useState<QuizResults | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const params = useParams();
+
+  const fetchResults = useCallback(async () => {
+    try {
+      const nameFromUrl = searchParams.get('name');
+      if (!nameFromUrl) {
+        router.push('/');
+        return;
+      }
+
+      const response = await fetch(`/api/quizzes/${params.id}/submissions?userName=${encodeURIComponent(nameFromUrl)}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setResults(data.data);
+        
+        // Set language from quiz
+        if (data.data.quiz?.language && data.data.quiz.language !== i18n.language) {
+          await i18n.changeLanguage(data.data.quiz.language);
+        }
+      } else {
+        console.error('Results not found');
+      }
+    } catch {
+      console.error('Failed to load results');
+    }
+  }, [params.id, searchParams, router, i18n]);
 
   useEffect(() => {
-    const storedResults = sessionStorage.getItem('quizResults');
-    const storedQuizData = sessionStorage.getItem('quizData');
-    
-    if (!storedResults) {
-      router.push('/');
-      return;
-    }
-
-    try {
-      const parsedResults = JSON.parse(storedResults);
-      setResults(parsedResults);
-      
-      if (storedQuizData) {
-        const quizData = JSON.parse(storedQuizData);
-        // Force set the teacher's language and update document direction
-        if (quizData.language) {
-          i18n.changeLanguage(quizData.language);
-          const isRTL = quizData.language === 'ar';
-          document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
-          document.documentElement.lang = quizData.language;
-        }
-      }
-    } catch (err) {
-      router.push('/');
-    }
-  }, [router, i18n]);
+    fetchResults();
+  }, [fetchResults]);
 
   const handleNewQuiz = () => {
     sessionStorage.clear();
@@ -73,17 +84,22 @@ export default function ResultsPage() {
   const handleDownloadPDF = () => {
     if (!results) return;
     
-    generateStudentResultPDF({
-      userName: results.userName,
-      score: results.score,
-      totalQuestions: results.totalQuestions,
-      percentage: results.percentage,
-      results: results.results,
-      quizTitle: results.quizTitle,
-      schoolName: results.schoolName,
-      teacherName: results.teacherName,
-      major: results.major,
-    }, i18n.language);
+    generateResultsPDF(
+      {
+        userName: results.userName,
+        score: results.score,
+        totalQuestions: results.totalQuestions,
+        percentage: results.percentage,
+        results: results.results,
+        timeSpent: results.timeSpent,
+      },
+      {
+        title: results.quiz.title,
+        schoolName: results.quiz.schoolName,
+        teacherName: results.quiz.teacherName,
+        major: results.quiz.major,
+      }
+    );
   };
 
   if (!results) {
@@ -282,6 +298,11 @@ export default function ResultsPage() {
               </Button>
             </div>
           </div>
+
+          <p className="text-base text-gray-700 leading-relaxed">
+            {t('quiz.results.description')} <strong>{results.quiz.title}</strong>. 
+                                {t('quiz.results.reviewAnswers')}
+          </p>
         </div>
       </div>
     </div>

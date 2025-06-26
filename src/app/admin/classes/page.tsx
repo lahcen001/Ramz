@@ -35,7 +35,7 @@ interface ClassData {
 }
 
 export default function ClassesPage() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const router = useRouter();
   const [classes, setClasses] = useState<ClassData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -69,7 +69,7 @@ export default function ClassesPage() {
       } else {
         setError('Failed to fetch classes');
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
@@ -107,7 +107,7 @@ export default function ClassesPage() {
       } else {
         setError(result.error || 'Failed to create class');
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Please try again.');
     } finally {
       setIsCreating(false);
@@ -129,7 +129,7 @@ export default function ClassesPage() {
       } else {
         setError(result.error || 'Failed to delete class');
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Please try again.');
     }
   };

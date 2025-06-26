@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,11 @@ interface Quiz {
   teacherName: string;
   major: string;
   pin: string;
-  questions: any[];
+  questions: Array<{
+    text: string;
+    answers: string[];
+    correctAnswerIndex: number;
+  }>;
   createdAt: string;
   hasTimeLimit: boolean;
   timeLimit?: number;
@@ -60,15 +64,11 @@ export default function AdminPage() {
   const [isImporting, setIsImporting] = useState(false);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [importPreview, setImportPreview] = useState<CSVQuestion[]>([]);
-  const [adminProfile, setAdminProfile] = useState<AdminProfile | null>(null);
+  const [, setAdminProfile] = useState<AdminProfile | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    checkAuthentication();
-  }, []);
-
-  const checkAuthentication = async () => {
+  const checkAuthentication = useCallback(async () => {
     try {
       const response = await fetch('/api/auth/admin');
       const data = await response.json();
@@ -85,12 +85,16 @@ export default function AdminPage() {
       } else {
         router.push('/admin/login');
       }
-    } catch (err) {
+    } catch {
       router.push('/admin/login');
     } finally {
       setCheckingAuth(false);
     }
-  };
+  }, [i18n, router]);
+
+  useEffect(() => {
+    checkAuthentication();
+  }, [checkAuthentication]);
 
   const fetchQuizzes = async () => {
     try {
@@ -103,7 +107,7 @@ export default function AdminPage() {
       } else {
         setError('Failed to fetch quizzes');
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
@@ -127,7 +131,7 @@ export default function AdminPage() {
       } else {
         setError('Failed to delete quiz');
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Please try again.');
     }
   };
@@ -136,8 +140,8 @@ export default function AdminPage() {
     try {
       await fetch('/api/auth/admin', { method: 'DELETE' });
       router.push('/admin/login');
-    } catch (err) {
-      console.error('Logout failed:', err);
+    } catch {
+      console.error('Logout failed');
     }
   };
 
@@ -152,8 +156,8 @@ export default function AdminPage() {
       setTimeout(() => {
         setCopiedQuizId(null);
       }, 2000);
-    } catch (err) {
-      console.error('Failed to copy link:', err);
+    } catch {
+      console.error('Failed to copy link');
       const textArea = document.createElement('textarea');
       textArea.value = `${window.location.origin}/join/${quizId}`;
       document.body.appendChild(textArea);
@@ -274,7 +278,7 @@ export default function AdminPage() {
       localStorage.setItem('importedQuestions', JSON.stringify(importPreview));
       setIsImportDialogOpen(false);
       router.push('/admin/create?imported=true');
-    } catch (err) {
+    } catch {
       setError('Failed to import questions. Please try again.');
     } finally {
       setIsImporting(false);

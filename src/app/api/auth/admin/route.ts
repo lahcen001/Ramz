@@ -130,8 +130,8 @@ export async function POST(request: NextRequest) {
         }
       });
     }
-  } catch (error) {
-    console.error('Auth error:', error);
+  } catch {
+    console.error('Auth error');
     return NextResponse.json(
       { success: false, error: 'Authentication failed' },
       { status: 500 }
@@ -146,7 +146,7 @@ export async function DELETE() {
     cookieStore.delete('admin-session');
     
     return NextResponse.json({ success: true, message: 'Logout successful' });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Logout failed' },
       { status: 500 }
@@ -189,7 +189,7 @@ export async function GET() {
         adminProfile: admin.adminProfile,
       }
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, authenticated: false });
   }
 }
@@ -249,8 +249,8 @@ export async function PUT(request: NextRequest) {
         adminProfile: admin.adminProfile,
       }
     });
-  } catch (error) {
-    console.error('Profile update error:', error);
+  } catch {
+    console.error('Profile update error');
     return NextResponse.json(
       { success: false, error: 'Failed to update profile' },
       { status: 500 }

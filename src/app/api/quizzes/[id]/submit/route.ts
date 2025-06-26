@@ -77,7 +77,7 @@ export async function POST(
         submissionId: submission._id,
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Failed to submit quiz' },
       { status: 500 }

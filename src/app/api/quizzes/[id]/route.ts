@@ -27,7 +27,7 @@ export async function GET(
     console.log('Individual quiz language:', quiz.language);
     
     return NextResponse.json({ success: true, data: quiz });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Failed to fetch quiz' },
       { status: 500 }
@@ -58,7 +58,7 @@ export async function PUT(
     }
     
     return NextResponse.json({ success: true, data: quiz });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Failed to update quiz' },
       { status: 500 }
@@ -83,7 +83,7 @@ export async function DELETE(
     }
     
     return NextResponse.json({ success: true, data: {} });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Failed to delete quiz' },
       { status: 500 }

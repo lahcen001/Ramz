@@ -1,28 +1,27 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Clock, ChevronLeft, ChevronRight, Send, AlertTriangle, Target } from 'lucide-react';
+import { Clock, ChevronLeft, AlertTriangle, Target } from 'lucide-react';
 import { PageLoader } from '@/components/ui/loader';
 import { Loader2 } from 'lucide-react';
 
-interface Question {
-  _id: string;
-  text: string;
-  answers: string[];
-}
-
-interface QuizData {
+interface Quiz {
   _id: string;
   title: string;
   schoolName: string;
   teacherName: string;
   major: string;
-  questions: Question[];
+  pin: string;
+  questions: Array<{
+    text: string;
+    answers: string[];
+    correctAnswerIndex: number;
+  }>;
   hasTimeLimit: boolean;
   timeLimit?: number;
   language?: string;
@@ -30,179 +29,117 @@ interface QuizData {
 
 export default function QuizPage() {
   const { t, i18n } = useTranslation();
-  const [quizData, setQuizData] = useState<QuizData | null>(null);
-  const [userName, setUserName] = useState('');
+  const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<number[]>([]);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [shuffledQuestions, setShuffledQuestions] = useState<Question[]>([]);
-  const [questionMapping, setQuestionMapping] = useState<number[]>([]); // Maps shuffled index to original index
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
-  const [quizStartTime, setQuizStartTime] = useState<number | null>(null);
+  const [userName, setUserName] = useState('');
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
 
+  // Get user name from URL params or session storage
   useEffect(() => {
-    const storedQuizData = sessionStorage.getItem('quizData');
-    const storedUserName = sessionStorage.getItem('userName');
-    
-    if (!storedQuizData || !storedUserName) {
-      router.push('/');
-      return;
-    }
-
-    try {
-      const parsedQuizData = JSON.parse(storedQuizData);
-      console.log('Quiz data from session:', parsedQuizData);
-      console.log('Quiz language:', parsedQuizData.language);
-      console.log('Current i18n language:', i18n.language);
-      
-      // Shuffle questions for anti-cheating (each user gets different order)
-      const shuffleArray = (array: any[]) => {
-        const indexed = array.map((item, index) => ({ item, originalIndex: index }));
-        for (let i = indexed.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [indexed[i], indexed[j]] = [indexed[j], indexed[i]];
-        }
-        return indexed;
-      };
-      
-      const shuffledIndexedQuestions = shuffleArray(parsedQuizData.questions);
-      const shuffled = shuffledIndexedQuestions.map(item => item.item);
-      const mapping = shuffledIndexedQuestions.map(item => item.originalIndex);
-      
-      console.log('Original question order:', parsedQuizData.questions.map((q: any) => q.text.substring(0, 30) + '...'));
-      console.log('Shuffled question order:', shuffled.map((q: any) => q.text.substring(0, 30) + '...'));
-      console.log('Question mapping (shuffled index -> original index):', mapping);
-      
-      setQuizData(parsedQuizData);
-      setShuffledQuestions(shuffled);
-      setQuestionMapping(mapping);
-      setUserName(storedUserName);
-      setAnswers(new Array(parsedQuizData.questions.length).fill(-1));
-      
-      // Force set the teacher's language and update document direction
-      if (parsedQuizData.language) {
-        console.log('Setting language to:', parsedQuizData.language);
-        i18n.changeLanguage(parsedQuizData.language);
-        const isRTL = parsedQuizData.language === 'ar';
-        document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
-        document.documentElement.lang = parsedQuizData.language;
-      } else {
-        console.log('No language found in quiz data, defaulting to English');
-        i18n.changeLanguage('en');
-        document.documentElement.dir = 'ltr';
-        document.documentElement.lang = 'en';
-      }
-      
-      if (parsedQuizData.hasTimeLimit && parsedQuizData.timeLimit) {
-        const startTime = Date.now();
-        setQuizStartTime(startTime);
-        setTimeRemaining(parsedQuizData.timeLimit * 60);
-      }
-    } catch (err) {
-      setError('Failed to load quiz data');
-      router.push('/');
-    }
-  }, [router, i18n]);
-
-  useEffect(() => {
-    if (timeRemaining === null || timeRemaining <= 0) return;
-
-    const interval = setInterval(() => {
-      setTimeRemaining(prev => {
-        if (prev === null || prev <= 1) {
-          handleSubmitQuiz(answers, true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [timeRemaining, answers]);
-
-  const handleAnswerSelect = (answerIndex: number) => {
-    setSelectedAnswer(answerIndex);
-  };
-
-  const handleNextQuestion = () => {
-    if (selectedAnswer === null) {
-      setError(t('quiz.selectAnswer'));
-      return;
-    }
-
-    const newAnswers = [...answers];
-    newAnswers[currentQuestion] = selectedAnswer;
-    setAnswers(newAnswers);
-    setSelectedAnswer(null);
-    setError('');
-
-    if (currentQuestion < shuffledQuestions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
+    const nameFromUrl = searchParams.get('name');
+    if (nameFromUrl) {
+      setUserName(nameFromUrl);
     } else {
-      handleSubmitQuiz(newAnswers);
+      const storedName = sessionStorage.getItem('userName');
+      if (storedName) {
+        setUserName(storedName);
+      } else {
+        router.push('/');
+      }
     }
-  };
+  }, [searchParams, router]);
 
-  const handlePreviousQuestion = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1);
-      setSelectedAnswer(answers[currentQuestion - 1] !== -1 ? answers[currentQuestion - 1] : null);
-      setError('');
+  const fetchQuiz = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/quizzes/${params.id}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setQuiz(data.data);
+        
+        // Set language from quiz (teacher's selection)
+        if (data.data.language && data.data.language !== i18n.language) {
+          await i18n.changeLanguage(data.data.language);
+        }
+        
+        // Set timer if quiz has time limit
+        if (data.data.hasTimeLimit && data.data.timeLimit) {
+          setTimeLeft(data.data.timeLimit * 60); // Convert minutes to seconds
+        }
+      } else {
+        setError('Quiz not found');
+      }
+    } catch {
+      setError('Failed to load quiz');
     }
-  };
+  }, [params.id, i18n]);
 
-  const handleSubmitQuiz = async (finalAnswers: number[], wasAutoSubmitted = false) => {
+  useEffect(() => {
+    if (params.id) {
+      fetchQuiz();
+    }
+  }, [params.id, fetchQuiz]);
+
+  const handleSubmitQuiz = useCallback(async () => {
+    if (!quiz || !userName || isSubmitting) return;
+
     setIsSubmitting(true);
-    setError('');
-
-    let timeSpent = null;
-    if (quizStartTime) {
-      timeSpent = Math.floor((Date.now() - quizStartTime) / 1000);
-    }
-
-    // Map shuffled answers back to original question order
-    const originalOrderAnswers = new Array(finalAnswers.length).fill(-1);
-    finalAnswers.forEach((answer, shuffledIndex) => {
-      const originalIndex = questionMapping[shuffledIndex];
-      originalOrderAnswers[originalIndex] = answer;
-    });
-    
-    console.log('Shuffled answers:', finalAnswers);
-    console.log('Original order answers:', originalOrderAnswers);
-    console.log('Question mapping used:', questionMapping);
 
     try {
-      const response = await fetch(`/api/quizzes/${params.id}/submit`, {
+      const answers = Object.entries(selectedAnswers).map(([questionIndex, answerIndex]) => ({
+        questionIndex: parseInt(questionIndex),
+        answerIndex: answerIndex,
+      }));
+
+      const response = await fetch(`/api/quizzes/${quiz._id}/submit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          answers: originalOrderAnswers,
           userName,
-          timeSpent,
-          wasAutoSubmitted,
+          answers,
+          timeSpent: quiz.hasTimeLimit && quiz.timeLimit ? (quiz.timeLimit * 60) - (timeLeft || 0) : undefined,
+          wasAutoSubmitted: timeLeft === 0,
         }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        sessionStorage.setItem('quizResults', JSON.stringify(data.data));
-        router.push(`/quiz/${params.id}/results`);
+        router.push(`/quiz/${quiz._id}/results?name=${encodeURIComponent(userName)}`);
       } else {
         setError(data.error || 'Failed to submit quiz');
       }
-    } catch (err) {
-      setError(t('home.errors.networkError'));
+    } catch {
+      setError('Network error. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [quiz, userName, isSubmitting, selectedAnswers, timeLeft, router]);
+
+  // Timer effect
+  useEffect(() => {
+    if (timeLeft === null || timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev === null || prev <= 1) {
+          handleSubmitQuiz();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft, handleSubmitQuiz]);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -217,12 +154,12 @@ export default function QuizPage() {
     return 'text-red-600';
   };
 
-  if (!quizData || shuffledQuestions.length === 0) {
+  if (!quiz) {
     return <PageLoader text={t('quiz.loadingQuiz')} />;
   }
 
-  const question = shuffledQuestions[currentQuestion];
-  const progress = ((currentQuestion + 1) / shuffledQuestions.length) * 100;
+  const question = quiz.questions[currentQuestion];
+  const progress = ((currentQuestion + 1) / quiz.questions.length) * 100;
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -236,7 +173,7 @@ export default function QuizPage() {
               <Target className="h-5 w-5 text-blue-600" />
               <div>
                 <h1 className="text-sm sm:text-base font-semibold text-gray-900 truncate">
-                  {quizData.title}
+                  {quiz.title}
                 </h1>
                 <p className="text-xs text-gray-600">
                   {t('quiz.welcome')}, {userName}
@@ -245,11 +182,11 @@ export default function QuizPage() {
             </div>
 
             {/* Timer - Mobile optimized */}
-            {timeRemaining !== null && (
-              <div className={`flex items-center gap-1 px-2 py-1 rounded-full bg-white shadow-sm ${getTimeColor(timeRemaining, quizData.timeLimit! * 60)}`}>
+            {timeLeft !== null && (
+              <div className={`flex items-center gap-1 px-2 py-1 rounded-full bg-white shadow-sm ${getTimeColor(timeLeft, quiz.timeLimit! * 60)}`}>
                 <Clock className="h-4 w-4" />
                 <span className="text-sm font-mono font-semibold">
-                  {formatTime(timeRemaining)}
+                  {formatTime(timeLeft)}
                 </span>
               </div>
             )}
@@ -258,7 +195,7 @@ export default function QuizPage() {
           {/* Progress Bar */}
           <div className="mt-3">
             <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-              <span>{t('quiz.question')} {currentQuestion + 1} {t('quiz.of')} {shuffledQuestions.length}</span>
+              <span>{t('quiz.question')} {currentQuestion + 1} {t('quiz.of')} {quiz.questions.length}</span>
               <span>{Math.round(progress)}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -280,7 +217,7 @@ export default function QuizPage() {
                   🔀 {t('quiz.shuffled')}
                 </span>
                 <span className="text-xs text-gray-500">
-                  ID: {question._id.slice(-6)}
+                  ID: {quiz._id.slice(-6)}
                 </span>
               </div>
               <CardTitle className="text-base sm:text-lg text-gray-900 leading-relaxed">
@@ -294,20 +231,20 @@ export default function QuizPage() {
                 {question.answers.map((answer, index) => (
                   <button
                     key={index}
-                    onClick={() => handleAnswerSelect(index)}
+                    onClick={() => setSelectedAnswers({ [currentQuestion]: index })}
                     className={`w-full p-3 sm:p-4 text-left rounded-lg border-2 transition-all duration-200 ${
-                      selectedAnswer === index
+                      selectedAnswers[currentQuestion] === index
                         ? 'border-blue-500 bg-blue-50 text-blue-900'
                         : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                        selectedAnswer === index
+                        selectedAnswers[currentQuestion] === index
                           ? 'border-blue-500 bg-blue-500'
                           : 'border-gray-300'
                       }`}>
-                        {selectedAnswer === index && (
+                        {selectedAnswers[currentQuestion] === index && (
                           <div className="w-2 h-2 rounded-full bg-white"></div>
                         )}
                       </div>
@@ -331,7 +268,7 @@ export default function QuizPage() {
               <div className="flex-shrink-0 flex gap-3 mt-4 pt-4 border-t border-gray-200">
                 <Button
                   variant="outline"
-                  onClick={handlePreviousQuestion}
+                  onClick={() => setCurrentQuestion(Math.max(currentQuestion - 1, 0))}
                   disabled={currentQuestion === 0 || isSubmitting}
                   className="flex-1 h-11 sm:h-12"
                 >
@@ -340,8 +277,8 @@ export default function QuizPage() {
                 </Button>
 
                 <Button
-                  onClick={handleNextQuestion}
-                  disabled={selectedAnswer === null || isSubmitting}
+                  onClick={handleSubmitQuiz}
+                  disabled={Object.keys(selectedAnswers).length === 0 || isSubmitting}
                   className="flex-1 h-11 sm:h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                 >
                   {isSubmitting ? (
@@ -349,15 +286,9 @@ export default function QuizPage() {
                                               <Loader2 className="w-4 h-4 animate-spin" />
                       {t('quiz.submitting')}
                     </div>
-                  ) : currentQuestion === shuffledQuestions.length - 1 ? (
-                    <div className="flex items-center gap-2">
-                      <Send className="h-4 w-4" />
-                      {t('quiz.submit')}
-                    </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      {t('quiz.next')}
-                      <ChevronRight className="h-4 w-4" />
+                      {t('quiz.submit')}
                     </div>
                   )}
                 </Button>
@@ -367,12 +298,12 @@ export default function QuizPage() {
         </div>
 
         {/* Time Warning - Mobile optimized */}
-        {timeRemaining !== null && timeRemaining <= 60 && timeRemaining > 0 && (
+        {timeLeft !== null && timeLeft <= 60 && timeLeft > 0 && (
           <div className="flex-shrink-0 bg-red-50 border-t border-red-200 px-4 py-3">
             <div className="flex items-center gap-2 text-red-700">
               <AlertTriangle className="h-4 w-4" />
               <span className="text-sm font-medium">
-                {t('quiz.warnings.timeWarning')} {Math.ceil(timeRemaining / 60)} {t('quiz.warnings.minute')} {t('quiz.warnings.remaining')}
+                {t('quiz.warnings.timeWarning')} {Math.ceil(timeLeft / 60)} {t('quiz.warnings.minute')} {t('quiz.warnings.remaining')}
               </span>
             </div>
             <p className="text-xs text-red-600 mt-1">

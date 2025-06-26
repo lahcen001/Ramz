@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     console.log('Language being returned:', quizData.language);
     
     return NextResponse.json({ success: true, data: quizData });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Failed to join quiz' },
       { status: 500 }
