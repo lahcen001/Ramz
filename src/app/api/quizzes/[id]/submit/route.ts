@@ -30,7 +30,7 @@ export async function POST(
     
     // Calculate score
     let score = 0;
-    const results = quiz.questions.map((question, index) => {
+    const results = quiz.questions.map((question: { text: string; answers: string[]; correctAnswerIndex: number }, index: number) => {
       const userAnswer = answers[index];
       const isCorrect = userAnswer === question.correctAnswerIndex;
       if (isCorrect) score++;

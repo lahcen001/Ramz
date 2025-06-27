@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { PageLoader } from '@/components/ui/loader';
-import { Download } from 'lucide-react';
+import { Download, ArrowLeft, Target, Users, TrendingUp, Trophy, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { generateBulkResultsPDF } from '@/lib/pdfUtils';
 
 interface QuizSubmission {
@@ -89,8 +89,6 @@ export default function QuizParticipantsPage() {
     return 'text-red-600';
   };
 
-
-
   const handleDownloadBulkPDF = () => {
     if (!data?.submissions || data.submissions.length === 0) return;
     
@@ -119,11 +117,12 @@ export default function QuizParticipantsPage() {
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-        <Card>
+      <div className="h-screen w-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
           <CardContent className="p-6 text-center">
-            <p className="mb-4">Quiz not found</p>
-            <Button onClick={() => router.push('/admin')}>
+            <p className="mb-4 text-gray-600">Quiz not found</p>
+            <Button onClick={() => router.push('/admin')} className="w-full">
+              <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
             </Button>
           </CardContent>
@@ -137,168 +136,201 @@ export default function QuizParticipantsPage() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Quiz Participants</h1>
-            <p className="text-gray-600 mt-2">
-              {data?.quiz?.title} • PIN: <code className="bg-gray-100 px-2 py-1 rounded font-mono">{data?.quiz?.pin}</code>
-            </p>
-          </div>
-          <div className="flex gap-2">
-            {data?.submissions?.length > 0 && (
-              <Button 
-                onClick={handleDownloadBulkPDF}
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Download All Results PDF
-              </Button>
-            )}
-            <Button variant="outline" onClick={() => router.push('/admin')}>
-              Back to Dashboard
-            </Button>
-          </div>
-        </div>
-
-        {error && (
-          <Alert>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-blue-600">{data?.submissions?.length || 0}</div>
-              <div className="text-sm text-gray-600">Total Participants</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className={`text-2xl font-bold ${getScoreColor(averageScore)}`}>
-                {averageScore.toFixed(1)}%
-              </div>
-              <div className="text-sm text-gray-600">Average Score</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-green-600">
-                {data?.submissions?.filter(s => s.percentage >= 80).length || 0}
-              </div>
-              <div className="text-sm text-gray-600">Excellent (80%+)</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-red-600">
-                {data?.submissions?.filter(s => s.percentage < 60).length || 0}
-              </div>
-              <div className="text-sm text-gray-600">Need Improvement (&lt;60%)</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Participants List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>All Participants ({data?.submissions?.length || 0})</CardTitle>
-            <CardDescription>
-              Click on a participant to view detailed results
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {!data?.submissions || data.submissions.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-600">No participants yet</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  Share the PIN code <code className="bg-gray-100 px-2 py-1 rounded">{data?.quiz?.pin}</code> with students
+    <div className="h-screen w-full overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="h-full flex flex-col sm:max-w-6xl sm:mx-auto">
+        {/* Header - Fixed for mobile */}
+        <div className="flex-shrink-0 bg-white/80 backdrop-blur-sm border-b border-gray-200 px-4 py-3 sm:py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <Target className="h-6 w-6 text-blue-600 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">Participants</h1>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">
+                  {data?.quiz?.title} • PIN: <code className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono">{data?.quiz?.pin}</code>
                 </p>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {data.submissions.map((submission) => (
-                  <div key={submission._id} className="border rounded-lg p-4">
-                    <div 
-                      className="flex justify-between items-center cursor-pointer"
-                      onClick={() => toggleSubmissionDetails(submission._id)}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="font-medium text-lg">{submission.userName}</div>
-                        <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          submission.percentage >= 80 ? 'bg-green-100 text-green-800' :
-                          submission.percentage >= 60 ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {submission.percentage}% ({submission.score}/{submission.totalQuestions})
-                        </div>
-                        {submission.timeSpent && (
-                          <div className="text-sm text-gray-600">
-                            Time: {Math.floor(submission.timeSpent / 60)}:{(submission.timeSpent % 60).toString().padStart(2, '0')}
-                          </div>
-                        )}
-                        {submission.wasAutoSubmitted && (
-                          <div className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
-                            Auto-submitted
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-500">
-                          {new Date(submission.submittedAt).toLocaleString()}
-                        </span>
-                        <Button variant="ghost" size="sm">
-                          {expandedSubmissions.has(submission._id) ? '▼' : '▶'}
-                        </Button>
-                      </div>
-                    </div>
+            </div>
+            <div className="flex gap-2 flex-shrink-0">
+              {data?.submissions?.length > 0 && (
+                <Button 
+                  size="sm"
+                  onClick={handleDownloadBulkPDF}
+                  className="h-8 sm:h-10 px-3 sm:px-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                >
+                  <Download className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">PDF</span>
+                </Button>
+              )}
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => router.push('/admin')}
+                className="h-8 sm:h-10 px-3 sm:px-4"
+              >
+                <ArrowLeft className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Back</span>
+              </Button>
+            </div>
+          </div>
+        </div>
 
-                    {expandedSubmissions.has(submission._id) && (
-                      <div className="mt-4 pt-4 border-t">
-                        <h4 className="font-medium mb-3">Detailed Results:</h4>
-                        <div className="space-y-3">
-                          {submission.results.map((result, index) => (
-                            <div key={index} className="border rounded p-3">
-                              <div className="flex items-start gap-2 mb-2">
-                                <span className="font-medium text-sm bg-gray-100 px-2 py-1 rounded">
-                                  Q{result.questionIndex + 1}
-                                </span>
-                                <div className="flex-1">
-                                  <p className="font-medium">{result.questionText}</p>
-                                </div>
-                                <div className={`text-sm font-medium px-2 py-1 rounded ${
-                                  result.isCorrect 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : 'bg-red-100 text-red-800'
-                                }`}>
-                                  {result.isCorrect ? '✓' : '✗'}
-                                </div>
+        {/* Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="space-y-4 sm:space-y-6">
+            {error && (
+              <Alert className="border-red-200 bg-red-50">
+                <AlertDescription className="text-red-700">{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {/* Summary Stats - Mobile Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <Card>
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-blue-600" />
+                    <div>
+                      <div className="text-lg sm:text-2xl font-bold text-blue-600">{data?.submissions?.length || 0}</div>
+                      <div className="text-xs sm:text-sm text-gray-600">Participants</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-purple-600" />
+                    <div>
+                      <div className={`text-lg sm:text-2xl font-bold ${getScoreColor(averageScore)}`}>
+                        {averageScore.toFixed(1)}%
+                      </div>
+                      <div className="text-xs sm:text-sm text-gray-600">Average</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center gap-2">
+                    <Trophy className="h-4 w-4 text-green-600" />
+                    <div>
+                      <div className="text-lg sm:text-2xl font-bold text-green-600">
+                        {data?.submissions?.filter(s => s.percentage >= 80).length || 0}
+                      </div>
+                      <div className="text-xs sm:text-sm text-gray-600">Excellent</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                    <div>
+                      <div className="text-lg sm:text-2xl font-bold text-red-600">
+                        {data?.submissions?.filter(s => s.percentage < 60).length || 0}
+                      </div>
+                      <div className="text-xs sm:text-sm text-gray-600">Need Help</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Participants List */}
+            {data?.submissions?.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No participants yet</h3>
+                  <p className="text-sm text-gray-600">
+                    Share the quiz PIN with students to get started.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                  Participant Results ({data?.submissions?.length})
+                </h2>
+                <div className="space-y-3">
+                  {data?.submissions?.map((submission) => (
+                    <Card key={submission._id} className="hover:shadow-md transition-shadow">
+                      <CardHeader 
+                        className="pb-3 cursor-pointer"
+                        onClick={() => toggleSubmissionDetails(submission._id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-3">
+                              <div className="min-w-0 flex-1">
+                                <CardTitle className="text-base sm:text-lg truncate">{submission.userName}</CardTitle>
+                                <CardDescription className="text-sm">
+                                  Submitted {new Date(submission.submittedAt).toLocaleDateString()}
+                                  {submission.timeSpent && ` • ${Math.round(submission.timeSpent / 60)}m ${submission.timeSpent % 60}s`}
+                                  {submission.wasAutoSubmitted && ' • Auto-submitted'}
+                                </CardDescription>
                               </div>
-                              
-                              <div className="pl-4 space-y-1 text-sm">
-                                <div className={`${result.isCorrect ? 'text-green-700' : 'text-red-700'}`}>
-                                  Student answer: {result.userAnswerText}
+                              <div className="text-right flex-shrink-0">
+                                <div className={`text-lg sm:text-xl font-bold ${getScoreColor(submission.percentage)}`}>
+                                  {submission.score}/{submission.totalQuestions}
                                 </div>
-                                {!result.isCorrect && (
-                                  <div className="text-green-700">
-                                    Correct answer: {result.correctAnswerText}
-                                  </div>
-                                )}
+                                <div className={`text-sm ${getScoreColor(submission.percentage)}`}>
+                                  {submission.percentage.toFixed(1)}%
+                                </div>
                               </div>
                             </div>
-                          ))}
+                          </div>
+                          <div className="ml-3 flex-shrink-0">
+                            {expandedSubmissions.has(submission._id) ? (
+                              <ChevronUp className="h-5 w-5 text-gray-400" />
+                            ) : (
+                              <ChevronDown className="h-5 w-5 text-gray-400" />
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                      </CardHeader>
+                      
+                      {expandedSubmissions.has(submission._id) && (
+                        <CardContent className="pt-0">
+                          <div className="border-t border-gray-200 pt-4">
+                            <h4 className="text-sm font-medium text-gray-900 mb-3">Detailed Results</h4>
+                            <div className="space-y-3">
+                              {submission.results.map((result, index) => (
+                                <div key={index} className="bg-gray-50 rounded-lg p-3">
+                                  <div className="flex items-start gap-3">
+                                    <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                                      result.isCorrect ? 'bg-green-500' : 'bg-red-500'
+                                    }`}>
+                                      {index + 1}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium text-gray-900 mb-2">{result.questionText}</p>
+                                      <div className="space-y-1 text-xs">
+                                        <div className={`${result.isCorrect ? 'text-green-700' : 'text-red-700'}`}>
+                                          <strong>Your answer:</strong> {result.userAnswerText}
+                                        </div>
+                                        {!result.isCorrect && (
+                                          <div className="text-green-700">
+                                            <strong>Correct answer:</strong> {result.correctAnswerText}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </CardContent>
+                      )}
+                    </Card>
+                  ))}
+                </div>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

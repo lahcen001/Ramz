@@ -17,6 +17,7 @@ export interface IQuiz extends Document {
   timeLimit?: number; // Time limit in minutes (0 or null means no time limit)
   hasTimeLimit: boolean;
   language: string; // Language selected by the teacher (en, ar, fr)
+  classId?: mongoose.Types.ObjectId;
 }
 
 const QuestionSchema = new Schema<IQuestion>({

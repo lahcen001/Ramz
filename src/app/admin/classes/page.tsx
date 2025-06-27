@@ -12,7 +12,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Users, BookOpen, Edit, Trash2, GraduationCap } from 'lucide-react';
+import { Plus, Users, BookOpen, Edit, Trash2, GraduationCap, Target, ArrowLeft } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 interface ClassData {
   _id: string;
@@ -139,226 +140,238 @@ export default function ClassesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Class Management</h1>
-            <p className="text-gray-600 mt-2">Create and manage your classes</p>
-          </div>
-          <div className="flex gap-3">
-            <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create New Class
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle>Create New Class</DialogTitle>
-                  <DialogDescription>
-                    Fill in the details to create a new class for your students.
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleCreateClass} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+    <div className="h-screen w-full overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="h-full flex flex-col sm:max-w-6xl sm:mx-auto">
+        {/* Header - Fixed for mobile */}
+        <div className="flex-shrink-0 bg-white/80 backdrop-blur-sm border-b border-gray-200 px-4 py-3 sm:py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Target className="h-6 w-6 text-blue-600" />
+              <div>
+                <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900">Classes</h1>
+                <p className="text-xs sm:text-sm text-gray-600">Create and manage your classes</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="h-8 sm:h-10 px-3 sm:px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                    <Plus className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">New Class</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="w-full max-w-md sm:max-w-lg mx-4">
+                  <DialogHeader>
+                    <DialogTitle>Create New Class</DialogTitle>
+                    <DialogDescription className="text-sm">
+                      Fill in the details to create a new class for your students.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleCreateClass} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="name" className="text-sm">Class Name *</Label>
+                        <Input
+                          id="name"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          placeholder="e.g., Math Grade 10A"
+                          className="h-11"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="grade" className="text-sm">Grade/Level</Label>
+                        <Input
+                          id="grade"
+                          value={formData.grade}
+                          onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
+                          placeholder="e.g., Grade 10"
+                          className="h-11"
+                        />
+                      </div>
+                    </div>
+                    
                     <div>
-                      <Label htmlFor="name">Class Name *</Label>
-                      <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="e.g., Math Grade 10A"
-                        required
+                      <Label htmlFor="description" className="text-sm">Description</Label>
+                      <Textarea
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        placeholder="Brief description of the class"
+                        rows={3}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="grade">Grade/Level</Label>
-                      <Input
-                        id="grade"
-                        value={formData.grade}
-                        onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
-                        placeholder="e.g., Grade 10"
-                      />
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="schoolName" className="text-sm">School Name</Label>
+                        <Input
+                          id="schoolName"
+                          value={formData.schoolName}
+                          onChange={(e) => setFormData({ ...formData, schoolName: e.target.value })}
+                          placeholder="School name"
+                          className="h-11"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="teacherName" className="text-sm">Teacher Name</Label>
+                        <Input
+                          id="teacherName"
+                          value={formData.teacherName}
+                          onChange={(e) => setFormData({ ...formData, teacherName: e.target.value })}
+                          placeholder="Teacher name"
+                          className="h-11"
+                        />
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Brief description of the class"
-                      rows={3}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
+
                     <div>
-                      <Label htmlFor="schoolName">School Name *</Label>
-                      <Input
-                        id="schoolName"
-                        value={formData.schoolName}
-                        onChange={(e) => setFormData({ ...formData, schoolName: e.target.value })}
-                        placeholder="School name"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="teacherName">Teacher Name *</Label>
-                      <Input
-                        id="teacherName"
-                        value={formData.teacherName}
-                        onChange={(e) => setFormData({ ...formData, teacherName: e.target.value })}
-                        placeholder="Your name"
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="subject">Subject</Label>
+                      <Label htmlFor="subject" className="text-sm">Subject</Label>
                       <Input
                         id="subject"
                         value={formData.subject}
                         onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                        placeholder="e.g., Mathematics"
+                        placeholder="e.g., Mathematics, Science"
+                        className="h-11"
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="language">Language</Label>
-                      <Select value={formData.language} onValueChange={(value) => setFormData({ ...formData, language: value })}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="en">English</SelectItem>
-                          <SelectItem value="ar">العربية</SelectItem>
-                          <SelectItem value="fr">Français</SelectItem>
-                        </SelectContent>
-                      </Select>
+
+                    {error && (
+                      <Alert className="border-red-200 bg-red-50">
+                        <AlertDescription className="text-red-700 text-sm">
+                          {error}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    <div className="flex gap-3 pt-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsCreateModalOpen(false)}
+                        className="flex-1 h-11"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={isCreating}
+                        className="flex-1 h-11 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                      >
+                        {isCreating ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          'Create Class'
+                        )}
+                      </Button>
                     </div>
-                  </div>
-                  
-                  {error && (
-                    <Alert>
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
-                  
-                  <div className="flex justify-end gap-3">
-                    <Button type="button" variant="outline" onClick={() => setIsCreateModalOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit" disabled={isCreating}>
-                      {isCreating ? 'Creating...' : 'Create Class'}
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
-            
-            <Button variant="outline" onClick={() => router.push('/admin')}>
-              Back to Dashboard
-            </Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => router.push('/admin')}
+                className="h-8 sm:h-10 px-3 sm:px-4"
+              >
+                <ArrowLeft className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Back</span>
+              </Button>
+            </div>
           </div>
         </div>
 
-        {error && !isCreateModalOpen && (
-          <Alert>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+        {/* Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {error && (
+            <Alert className="mb-4 border-red-200 bg-red-50">
+              <AlertDescription className="text-red-700">{error}</AlertDescription>
+            </Alert>
+          )}
 
-        {/* Classes Grid */}
-        {classes.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Classes Yet</h3>
-              <p className="text-gray-600 mb-4">Create your first class to start organizing your students and quizzes.</p>
-              <Button onClick={() => setIsCreateModalOpen(true)}>
+          {classes.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center">
+              <GraduationCap className="h-16 w-16 text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No classes yet</h3>
+              <p className="text-sm text-gray-600 mb-6 max-w-sm">
+                Create your first class to start organizing your students and quizzes.
+              </p>
+              <Button 
+                onClick={() => setIsCreateModalOpen(true)}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
                 <Plus className="h-4 w-4 mr-2" />
-                Create First Class
+                Create Your First Class
               </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {classes.map((classData) => (
-              <Card key={classData._id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg">{classData.name}</CardTitle>
-                      <CardDescription className="mt-1">
-                        {classData.grade && `${classData.grade} • `}
-                        {classData.subject}
-                      </CardDescription>
-                    </div>
-                    <div className="flex gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => router.push(`/admin/classes/${classData._id}`)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleDeleteClass(classData._id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="text-sm text-gray-600">
-                      <strong>School:</strong> {classData.schoolName}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      <strong>Teacher:</strong> {classData.teacherName}
-                    </div>
-                    {classData.description && (
-                      <div className="text-sm text-gray-600">
-                        <strong>Description:</strong> {classData.description}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {classes.map((classItem) => (
+                <Card key={classItem._id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-lg truncate">{classItem.name}</CardTitle>
+                        <CardDescription className="text-sm mt-1">
+                          {classItem.grade && `${classItem.grade} • `}
+                          {classItem.subject}
+                        </CardDescription>
                       </div>
+                      <div className="flex gap-1 ml-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => router.push(`/admin/classes/${classItem._id}`)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteClass(classItem._id)}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    {classItem.description && (
+                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                        {classItem.description}
+                      </p>
                     )}
                     
-                    <div className="flex justify-between items-center pt-3 border-t">
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          {classData.students.length} students
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <BookOpen className="h-4 w-4" />
-                          {classData.quizzes.length} quizzes
-                        </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-blue-600" />
+                        <span className="text-gray-600">
+                          {classItem.students.length} students
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="h-4 w-4 text-green-600" />
+                        <span className="text-gray-600">
+                          {classItem.quizzes.length} quizzes
+                        </span>
                       </div>
                     </div>
-                    
-                    <Button 
-                      variant="outline" 
-                      className="w-full"
-                      onClick={() => router.push(`/admin/classes/${classData._id}`)}
-                    >
-                      Manage Class
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+
+                    {(classItem.schoolName || classItem.teacherName) && (
+                      <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                        {classItem.schoolName && <div>{classItem.schoolName}</div>}
+                        {classItem.teacherName && <div>Teacher: {classItem.teacherName}</div>}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

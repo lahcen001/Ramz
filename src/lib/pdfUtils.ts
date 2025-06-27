@@ -28,90 +28,7 @@ interface BulkData {
   students: StudentData[];
 }
 
-// Helper function to draw rounded rectangle
-const drawRoundedRect = (pdf: jsPDF, x: number, y: number, width: number, height: number, radius: number = 3) => {
-  pdf.roundedRect(x, y, width, height, radius, radius);
-};
 
-// Helper function to draw table with borders
-const drawTable = (pdf: jsPDF, data: any[], headers: string[], startX: number, startY: number, colWidths: number[]) => {
-  let currentY = startY;
-  const rowHeight = 8;
-  const headerHeight = 10;
-  
-  // Draw header background
-  pdf.setFillColor(37, 99, 235);
-  pdf.rect(startX, currentY, colWidths.reduce((a, b) => a + b, 0), headerHeight, 'F');
-  
-  // Draw header text
-  pdf.setTextColor(255, 255, 255);
-  pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'bold');
-  
-  let currentX = startX + 2;
-  headers.forEach((header, index) => {
-    pdf.text(header, currentX, currentY + 7);
-    currentX += colWidths[index];
-  });
-  
-  currentY += headerHeight;
-  
-  // Draw data rows
-  pdf.setTextColor(0, 0, 0);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setFontSize(9);
-  
-  data.forEach((row, rowIndex) => {
-    // Alternate row colors
-    if (rowIndex % 2 === 0) {
-      pdf.setFillColor(248, 250, 252);
-      pdf.rect(startX, currentY, colWidths.reduce((a, b) => a + b, 0), rowHeight, 'F');
-    }
-    
-    currentX = startX + 2;
-    row.forEach((cell: any, colIndex: number) => {
-      // Handle text wrapping for long content
-      const cellText = String(cell);
-      const maxWidth = colWidths[colIndex] - 4;
-      const splitText = pdf.splitTextToSize(cellText, maxWidth);
-      
-      if (splitText.length > 1) {
-        // Multi-line cell
-        splitText.forEach((line: string, lineIndex: number) => {
-          pdf.text(line, currentX, currentY + 6 + (lineIndex * 4));
-        });
-      } else {
-        pdf.text(cellText, currentX, currentY + 6);
-      }
-      
-      currentX += colWidths[colIndex];
-    });
-    
-    currentY += Math.max(rowHeight, splitText?.length * 4 + 4);
-  });
-  
-  // Draw table borders
-  pdf.setDrawColor(200, 200, 200);
-  pdf.setLineWidth(0.5);
-  
-  // Vertical lines
-  currentX = startX;
-  colWidths.forEach(width => {
-    currentX += width;
-    pdf.line(currentX, startY, currentX, currentY);
-  });
-  
-  // Horizontal lines
-  pdf.line(startX, startY, startX + colWidths.reduce((a, b) => a + b, 0), startY);
-  pdf.line(startX, startY + headerHeight, startX + colWidths.reduce((a, b) => a + b, 0), startY + headerHeight);
-  pdf.line(startX, currentY, startX + colWidths.reduce((a, b) => a + b, 0), currentY);
-  
-  // Left and right borders
-  pdf.line(startX, startY, startX, currentY);
-  pdf.line(startX + colWidths.reduce((a, b) => a + b, 0), startY, startX + colWidths.reduce((a, b) => a + b, 0), currentY);
-  
-  return currentY;
-};
 
 // Generate PDF for individual student result
 export const generateResultsPDF = (data: StudentData, quizInfo: { title: string; schoolName: string; teacherName: string; major: string }) => {
@@ -121,10 +38,10 @@ export const generateResultsPDF = (data: StudentData, quizInfo: { title: string;
   doc.setFont('helvetica');
   
   // Define colors
-  const primaryColor = [37, 99, 235]; // Blue
-  const successColor = [34, 197, 94]; // Green
-  const errorColor = [239, 68, 68]; // Red
-  const textColor = [55, 65, 81]; // Gray-700
+  const primaryColor: [number, number, number] = [37, 99, 235]; // Blue
+  const successColor: [number, number, number] = [34, 197, 94]; // Green
+  const errorColor: [number, number, number] = [239, 68, 68]; // Red
+  const textColor: [number, number, number] = [55, 65, 81]; // Gray-700
   
   // Header
   doc.setFillColor(...primaryColor);
@@ -154,7 +71,7 @@ export const generateResultsPDF = (data: StudentData, quizInfo: { title: string;
   yPos += 10;
   
   // Score Box
-  const scoreColor = data.percentage >= 80 ? successColor : data.percentage >= 60 ? [245, 158, 11] : errorColor;
+  const scoreColor = data.percentage >= 80 ? successColor : data.percentage >= 60 ? ([245, 158, 11] as [number, number, number]) : errorColor;
   doc.setFillColor(...scoreColor);
   doc.roundedRect(20, yPos, 170, 20, 3, 3, 'F');
   
@@ -230,10 +147,10 @@ export const generateBulkResultsPDF = (data: BulkData) => {
   doc.setFont('helvetica');
   
   // Define colors
-  const primaryColor = [37, 99, 235]; // Blue
-  const successColor = [34, 197, 94]; // Green
-  const errorColor = [239, 68, 68]; // Red
-  const textColor = [55, 65, 81]; // Gray-700
+  const primaryColor: [number, number, number] = [37, 99, 235]; // Blue
+  const successColor: [number, number, number] = [34, 197, 94]; // Green
+  const errorColor: [number, number, number] = [239, 68, 68]; // Red
+  const textColor: [number, number, number] = [55, 65, 81]; // Gray-700
   
   // Header
   doc.setFillColor(...primaryColor);
@@ -319,7 +236,7 @@ export const generateBulkResultsPDF = (data: BulkData) => {
     doc.text(`${student.score}/${student.totalQuestions}`, 100, yPos);
     
     // Color code percentage
-    const percentageColor = student.percentage >= 80 ? successColor : student.percentage >= 60 ? [245, 158, 11] : errorColor;
+    const percentageColor = student.percentage >= 80 ? successColor : student.percentage >= 60 ? ([245, 158, 11] as [number, number, number]) : errorColor;
     doc.setTextColor(...percentageColor);
     doc.text(`${student.percentage}%`, 130, yPos);
     

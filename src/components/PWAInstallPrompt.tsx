@@ -21,7 +21,7 @@ export default function PWAInstallPrompt() {
     // Check if app is already installed
     const checkInstalled = () => {
       if (window.matchMedia('(display-mode: standalone)').matches || 
-          (window.navigator as any).standalone === true) {
+          (window.navigator as { standalone?: boolean }).standalone === true) {
         setIsInstalled(true);
       }
     };
@@ -61,8 +61,8 @@ export default function PWAInstallPrompt() {
     if (!deferredPrompt) return;
 
     try {
-      await deferredPrompt.prompt();
-      const choiceResult = await deferredPrompt.userChoice;
+      await (deferredPrompt as BeforeInstallPromptEvent).prompt();
+      const choiceResult = await (deferredPrompt as BeforeInstallPromptEvent).userChoice;
       
       if (choiceResult.outcome === 'accepted') {
         console.log('User accepted the install prompt');

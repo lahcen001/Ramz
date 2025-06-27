@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { Target, Users, BookOpen, Clock, Pin, Link, ArrowRight } from 'lucide-react';
+import { Target, Users, BookOpen, Clock, Link, ArrowRight, Globe, Trophy } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 
 export default function Home() {

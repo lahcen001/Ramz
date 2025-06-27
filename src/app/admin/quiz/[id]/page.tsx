@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,11 +33,7 @@ export default function EditQuizPage() {
   const router = useRouter();
   const params = useParams();
 
-  useEffect(() => {
-    fetchQuiz();
-  }, [fetchQuiz]);
-
-  const fetchQuiz = async () => {
+  const fetchQuiz = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch(`/api/quizzes/${params.id}`);
@@ -53,7 +49,11 @@ export default function EditQuizPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [params.id]);
+
+  useEffect(() => {
+    fetchQuiz();
+  }, [fetchQuiz]);
 
   const handleQuizChange = (field: keyof Omit<Quiz, '_id' | 'questions' | 'pin'>, value: string | boolean | number) => {
     if (quiz) {
@@ -251,7 +251,7 @@ export default function EditQuizPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {quiz.questions.map((question: any, index: number) => (
+                {quiz.questions.map((question, index: number) => (
                   <div key={index} className="border rounded-lg p-4">
                     <div className="mb-2">
                       <h4 className="font-medium">Question {index + 1}</h4>

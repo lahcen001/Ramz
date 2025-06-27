@@ -151,7 +151,7 @@ export default function QuizResultsPage() {
                 </div>
               </div>
               <CardTitle className="text-xl font-bold text-gray-900 mb-1">
-                {results.userName}'s Score
+                {results.userName}&apos;s Score
               </CardTitle>
               <CardDescription className="text-sm">
                 {getScoreMessage(results.percentage)}

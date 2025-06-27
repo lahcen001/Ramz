@@ -242,7 +242,7 @@ export default function AdminPage() {
         const questions = parseCSV(text);
         setImportPreview(questions);
         setError('');
-      } catch (err) {
+      } catch {
         setError('Error parsing CSV file. Please check the format.');
         setImportPreview([]);
       }

@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       hasTimeLimit: quiz.hasTimeLimit,
       timeLimit: quiz.timeLimit,
       language: quiz.language || 'en', // Include the teacher's selected language
-      questions: quiz.questions.map(q => ({
+      questions: quiz.questions.map((q: { _id: string; text: string; answers: string[]; correctAnswerIndex: number }) => ({
         _id: q._id,
         text: q.text,
         answers: q.answers,
