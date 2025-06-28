@@ -113,10 +113,12 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
-      {/* Language Switcher - Only show on auth form */}
-      <div className="absolute top-4 right-4 z-10">
-        <LanguageSwitcher />
-      </div>
+      {/* Language Switcher - Only show during registration */}
+      {!isLogin && (
+        <div className="absolute top-4 right-4 z-10">
+          <LanguageSwitcher />
+        </div>
+      )}
 
       {/* Responsive Layout */}
       <div className="min-h-screen flex flex-col justify-center items-center px-4 py-8 lg:py-12">

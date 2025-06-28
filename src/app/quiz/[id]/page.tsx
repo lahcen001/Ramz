@@ -92,11 +92,14 @@ export default function QuizPage() {
     setIsSubmitting(true);
 
     try {
-      const answers = Object.entries(selectedAnswers).map(([questionIndex, answerIndex]) => ({
-        questionIndex: parseInt(questionIndex),
-        answerIndex: answerIndex,
-      }));
+      // Convert selectedAnswers to simple array format expected by backend
+      const answers = Array(quiz.questions.length).fill(-1);
+      Object.entries(selectedAnswers).forEach(([questionIndex, answerIndex]) => {
+        answers[parseInt(questionIndex)] = answerIndex;
+      });
 
+      console.log('Submitting quiz with data:', { userName, answers });
+      
       const response = await fetch(`/api/quizzes/${quiz._id}/submit`, {
         method: 'POST',
         headers: {
@@ -110,15 +113,23 @@ export default function QuizPage() {
         }),
       });
 
+      console.log('Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (data.success) {
         router.push(`/quiz/${quiz._id}/results?name=${encodeURIComponent(userName)}`);
       } else {
         setError(data.error || 'Failed to submit quiz');
       }
-    } catch {
-      setError('Network error. Please try again.');
+    } catch (error) {
+      console.error('Submit error:', error);
+      setError(`Network error: ${error.message}. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -278,7 +289,7 @@ export default function QuizPage() {
 
                 <Button
                   onClick={handleSubmitQuiz}
-                  disabled={Object.keys(selectedAnswers).length === 0 || isSubmitting}
+                  disabled={isSubmitting}
                   className="flex-1 h-11 sm:h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                 >
                   {isSubmitting ? (

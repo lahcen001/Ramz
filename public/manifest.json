@@ -61,22 +61,6 @@
       "purpose": "maskable any"
     }
   ],
-  "screenshots": [
-    {
-      "src": "/screenshots/desktop-home.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Home page for joining quizzes"
-    },
-    {
-      "src": "/screenshots/mobile-quiz.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Quiz interface on mobile"
-    }
-  ],
   "shortcuts": [
     {
       "name": "Join Quiz",

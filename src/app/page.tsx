@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { Target, Users, BookOpen, Clock, Link, ArrowRight, Globe, Trophy } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 
@@ -34,6 +33,8 @@ export default function Home() {
     setError('');
 
     try {
+      console.log('Joining quiz with:', { pin: quizPin.trim().toUpperCase(), userName: userName.trim() });
+      
       const response = await fetch('/api/quizzes/join', {
         method: 'POST',
         headers: {
@@ -45,7 +46,14 @@ export default function Home() {
         }),
       });
 
+      console.log('Join response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
+      console.log('Join response data:', data);
 
       if (data.success) {
         // Set language from teacher's selection
@@ -53,12 +61,13 @@ export default function Home() {
           await i18n.changeLanguage(data.data.language);
         }
         
-        router.push(`/quiz/${data.data.quizId}?name=${encodeURIComponent(userName.trim())}`);
+        router.push(`/quiz/${data.data._id}?name=${encodeURIComponent(userName.trim())}`);
       } else {
         setError(data.error || t('home.errors.failedToJoin'));
       }
-    } catch {
-      setError(t('home.errors.networkError'));
+    } catch (error) {
+      console.error('Join error:', error);
+      setError(`${t('home.errors.networkError')}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsJoining(false);
     }
@@ -77,11 +86,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      {/* Language Switcher - Fixed position for mobile */}
-      <div className="absolute top-2 right-2 rtl:right-auto rtl:left-2 z-10">
-        <LanguageSwitcher />
-      </div>
-
       {/* Mobile-First Layout with Desktop Support */}
       <div className="min-h-screen flex flex-col justify-center items-center px-4 py-8 lg:py-12">
         {/* Header Section - Compact for mobile */}

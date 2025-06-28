@@ -1,6 +1,5 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
 
 // Translation files
 import enCommon from '@/locales/en/common.json';
@@ -20,19 +19,13 @@ const resources = {
 };
 
 i18n
-  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources,
-    lng: 'en', // default language
+    lng: 'en', // default language - English for all users
     fallbackLng: 'en',
     defaultNS: 'common',
     ns: ['common'],
-    
-    detection: {
-      order: ['localStorage', 'navigator', 'htmlTag'],
-      caches: ['localStorage'],
-    },
 
     interpolation: {
       escapeValue: false, // React already handles escaping

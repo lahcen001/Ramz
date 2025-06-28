@@ -138,45 +138,65 @@ export default function RootLayout({
               });
               
               // Monitor DOM changes
-              if (typeof MutationObserver !== 'undefined') {
-                const observer = new MutationObserver(function(mutations) {
-                  mutations.forEach(function(mutation) {
-                    if (mutation.type === 'childList') {
-                      mutation.addedNodes.forEach(function(node) {
-                        if (node.nodeType === 1) { // Element node
-                          if (node.tagName === 'SCRIPT') {
-                            console.log('➕ Script added:', node.src || 'inline');
-                            
-                            // Monitor script loading
-                            node.addEventListener('load', function() {
-                              console.log('✅ Script loaded successfully:', node.src || 'inline');
-                            });
-                            
-                            node.addEventListener('error', function() {
-                              console.error('❌ Script failed to load:', node.src || 'inline');
-                            });
-                          }
-                          
-                          if (node.tagName === 'LINK' && node.rel === 'stylesheet') {
-                            console.log('➕ Stylesheet added:', node.href);
-                            
-                            // Monitor stylesheet loading
-                            node.addEventListener('load', function() {
-                              console.log('✅ Stylesheet loaded successfully:', node.href);
-                            });
-                            
-                            node.addEventListener('error', function() {
-                              console.error('❌ Stylesheet failed to load:', node.href);
-                            });
-                          }
+              if (typeof MutationObserver !== 'undefined' && typeof document !== 'undefined') {
+                // Wait for DOM to be ready
+                function initObserver() {
+                  if (document.head && document.body) {
+                    const observer = new MutationObserver(function(mutations) {
+                      mutations.forEach(function(mutation) {
+                        if (mutation.type === 'childList') {
+                          mutation.addedNodes.forEach(function(node) {
+                            if (node.nodeType === 1) { // Element node
+                              if (node.tagName === 'SCRIPT') {
+                                console.log('➕ Script added:', node.src || 'inline');
+                                
+                                // Monitor script loading
+                                node.addEventListener('load', function() {
+                                  console.log('✅ Script loaded successfully:', node.src || 'inline');
+                                });
+                                
+                                node.addEventListener('error', function() {
+                                  console.error('❌ Script failed to load:', node.src || 'inline');
+                                });
+                              }
+                              
+                              if (node.tagName === 'LINK' && node.rel === 'stylesheet') {
+                                console.log('➕ Stylesheet added:', node.href);
+                                
+                                // Monitor stylesheet loading
+                                node.addEventListener('load', function() {
+                                  console.log('✅ Stylesheet loaded successfully:', node.href);
+                                });
+                                
+                                node.addEventListener('error', function() {
+                                  console.error('❌ Stylesheet failed to load:', node.href);
+                                });
+                              }
+                            }
+                          });
                         }
                       });
+                    });
+                    
+                    try {
+                      observer.observe(document.head, { childList: true, subtree: true });
+                      observer.observe(document.body, { childList: true, subtree: true });
+                      console.log('🔍 MutationObserver initialized successfully');
+                    } catch (e) {
+                      console.warn('⚠️ MutationObserver failed to initialize:', e);
                     }
-                  });
-                });
+                  } else {
+                    // Try again after a short delay
+                    setTimeout(initObserver, 100);
+                  }
+                }
                 
-                observer.observe(document.head, { childList: true, subtree: true });
-                observer.observe(document.body, { childList: true, subtree: true });
+                // Initialize when DOM is loaded
+                if (document.readyState === 'loading') {
+                  document.addEventListener('DOMContentLoaded', initObserver);
+                } else {
+                  initObserver();
+                }
               }
               
               // Service Worker Registration with debugging

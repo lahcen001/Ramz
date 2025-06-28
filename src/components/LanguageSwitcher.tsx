@@ -21,7 +21,6 @@ export default function LanguageSwitcher() {
 
   const handleLanguageChange = (languageCode: string) => {
     i18n.changeLanguage(languageCode);
-    localStorage.setItem('language', languageCode);
     
     // Update document direction for RTL languages
     const isRTL = languageCode === 'ar';
