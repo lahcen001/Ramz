@@ -10,6 +10,8 @@ export async function GET(
   try {
     await dbConnect();
     const { id } = await params;
+    const url = new URL(request.url);
+    const userName = url.searchParams.get('userName');
     
     // Get the quiz
     const quiz = await Quiz.findById(id);
@@ -20,36 +22,76 @@ export async function GET(
       );
     }
     
-    // Get all submissions for this quiz
-    const submissions = await QuizSubmission.find({ quizId: id }).sort({ createdAt: -1 });
-    
-    // Format the data for the frontend
-    const participantsData = {
-      quiz: {
-        _id: quiz._id,
-        title: quiz.title,
-        pin: quiz.pin,
-        schoolName: quiz.schoolName,
-        teacherName: quiz.teacherName,
-        major: quiz.major,
-      },
-      submissions: submissions.map(submission => ({
-        _id: submission._id,
+    if (userName) {
+      // Get specific user's submission
+      const submission = await QuizSubmission.findOne({ 
+        quizId: id, 
+        userName: decodeURIComponent(userName) 
+      }).sort({ createdAt: -1 });
+      
+      if (!submission) {
+        return NextResponse.json(
+          { success: false, error: 'Submission not found' },
+          { status: 404 }
+        );
+      }
+      
+      // Format the data for the frontend (single user result)
+      const userResult = {
         userName: submission.userName,
         score: submission.score,
         totalQuestions: submission.totalQuestions,
         percentage: submission.percentage,
         results: submission.results,
         timeSpent: submission.timeSpent,
-        submittedAt: submission.createdAt,
-        wasAutoSubmitted: submission.wasAutoSubmitted,
-      })),
-    };
-    
-    return NextResponse.json({
-      success: true,
-      data: participantsData,
-    });
+        quizTitle: quiz.title,
+        schoolName: quiz.schoolName,
+        teacherName: quiz.teacherName,
+        major: quiz.major,
+        quiz: {
+          title: quiz.title,
+          schoolName: quiz.schoolName,
+          teacherName: quiz.teacherName,
+          major: quiz.major,
+        }
+      };
+      
+      return NextResponse.json({
+        success: true,
+        data: userResult,
+      });
+    } else {
+      // Get all submissions for this quiz (admin view)
+      const submissions = await QuizSubmission.find({ quizId: id }).sort({ createdAt: -1 });
+      
+      // Format the data for the frontend
+      const participantsData = {
+        quiz: {
+          _id: quiz._id,
+          title: quiz.title,
+          pin: quiz.pin,
+          schoolName: quiz.schoolName,
+          teacherName: quiz.teacherName,
+          major: quiz.major,
+        },
+        submissions: submissions.map(submission => ({
+          _id: submission._id,
+          userName: submission.userName,
+          score: submission.score,
+          totalQuestions: submission.totalQuestions,
+          percentage: submission.percentage,
+          results: submission.results,
+          timeSpent: submission.timeSpent,
+          submittedAt: submission.createdAt,
+          wasAutoSubmitted: submission.wasAutoSubmitted,
+        })),
+      };
+      
+      return NextResponse.json({
+        success: true,
+        data: participantsData,
+      });
+    }
   } catch (error) {
     console.error('Error fetching quiz submissions:', error);
     return NextResponse.json(
@@ -57,4 +99,4 @@ export async function GET(
       { status: 500 }
     );
   }
-} 
+}

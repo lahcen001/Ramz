@@ -123,7 +123,10 @@ export default function Home() {
             </CardHeader>
             
             <CardContent className="space-y-4 sm:space-y-6">
-              <form onSubmit={() => handleJoinQuiz(pin, name)} className="space-y-4 sm:space-y-6">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                handleJoinQuiz(pin, name);
+              }} className="space-y-4 sm:space-y-6">
                 {/* Shared link info - Compact for mobile */}
                 {searchParams.get('pin') && (
                   <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">

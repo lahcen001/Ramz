@@ -103,7 +103,7 @@ export default function QuizResultsPage() {
   };
 
   if (!results) {
-    return <PageLoader text="Loading results..." />;
+    return <PageLoader text={t('results.loadingResults')} />;
   }
 
   const getScoreColor = (percentage: number) => {
@@ -307,4 +307,4 @@ export default function QuizResultsPage() {
       </div>
     </div>
   );
-} 
+}

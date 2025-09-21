@@ -97,6 +97,7 @@
     "takeAnother": "Take Another Quiz",
     "detailedResults": "Detailed Results",
     "reviewAnswers": "Review your answers for each question",
+    "description": "You have completed the quiz",
     "yourAnswer": "Your answer",
     "correctAnswer": "Correct answer",
     "correct": "Correct",
@@ -317,4 +318,4 @@
       "button": "Install"
     }
   }
-} 
+}

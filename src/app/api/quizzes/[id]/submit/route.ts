@@ -35,11 +35,17 @@ export async function POST(
       const isCorrect = userAnswer === question.correctAnswerIndex;
       if (isCorrect) score++;
       
+      // Handle user answer text properly
+      let userAnswerText = 'No answer';
+      if (userAnswer >= 0 && userAnswer < question.answers.length) {
+        userAnswerText = question.answers[userAnswer];
+      }
+      
       return {
         questionIndex: index,
         questionText: question.text,
         userAnswerIndex: userAnswer,
-        userAnswerText: question.answers[userAnswer] || 'No answer',
+        userAnswerText: userAnswerText,
         correctAnswerIndex: question.correctAnswerIndex,
         correctAnswerText: question.answers[question.correctAnswerIndex],
         isCorrect,
@@ -83,4 +89,4 @@ export async function POST(
       { status: 500 }
     );
   }
-} 
+}

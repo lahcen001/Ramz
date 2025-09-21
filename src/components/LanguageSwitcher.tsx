@@ -9,23 +9,52 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Globe } from 'lucide-react';
+import { useLanguageChange } from '@/hooks/useLanguageChange';
 
 const languages = [
   { code: 'en', name: 'English', nativeName: 'English' },
-  { code: 'ar', name: 'Arabic', nativeName: 'العربية' },
   { code: 'fr', name: 'French', nativeName: 'Français' },
 ];
 
 export default function LanguageSwitcher() {
   const { i18n } = useTranslation();
+  useLanguageChange(); // This will force re-render on language change
 
-  const handleLanguageChange = (languageCode: string) => {
-    i18n.changeLanguage(languageCode);
+  const handleLanguageChange = async (languageCode: string) => {
+    console.log('Changing language to:', languageCode);
     
-    // Update document direction for RTL languages
-    const isRTL = languageCode === 'ar';
-    document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
+    // Update UI immediately
+    await i18n.changeLanguage(languageCode);
+    localStorage.setItem('language', languageCode);
+    
+    // Update document language
     document.documentElement.lang = languageCode;
+    document.documentElement.dir = 'ltr'; // Always left-to-right since Arabic is removed
+    
+    // Force a re-render by updating state
+    window.location.reload();
+    
+    // Update admin's language preference in database
+    try {
+      const response = await fetch('/api/auth/admin', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          language: languageCode,
+        }),
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        console.log('Admin language preference updated successfully');
+      } else {
+        console.error('Failed to update admin language preference:', data.error);
+      }
+    } catch (error) {
+      console.error('Error updating admin language preference:', error);
+    }
   };
 
   const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
@@ -33,19 +62,19 @@ export default function LanguageSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2 flex-row-reverse rtl:flex-row">
+        <Button variant="outline" size="sm" className="gap-2">
           <Globe className="h-4 w-4" />
           <span>{currentLanguage.nativeName}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="rtl:text-right">
+      <DropdownMenuContent align="end">
         {languages.map((language) => (
           <DropdownMenuItem
             key={language.code}
             onClick={() => handleLanguageChange(language.code)}
-            className={`${language.code === i18n.language ? 'bg-accent' : ''} rtl:text-right`}
+            className={language.code === i18n.language ? 'bg-accent' : ''}
           >
-            <div className="flex flex-col rtl:items-end">
+            <div className="flex flex-col">
               <span className="font-medium">{language.nativeName}</span>
               <span className="text-xs text-muted-foreground">{language.name}</span>
             </div>
@@ -54,4 +83,4 @@ export default function LanguageSwitcher() {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-} 
+}

@@ -7,7 +7,28 @@ import User from '@/lib/models/User';
 export async function GET() {
   try {
     await dbConnect();
-    const quizzes = await Quiz.find({}).select('-questions.correctAnswerIndex');
+    
+    // Check authentication and get admin info
+    const cookieStore = await cookies();
+    const adminSession = cookieStore.get('admin-session');
+    
+    if (!adminSession?.value) {
+      return NextResponse.json(
+        { success: false, error: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+    
+    const admin = await User.findById(adminSession.value);
+    if (!admin || admin.role !== 'admin') {
+      return NextResponse.json(
+        { success: false, error: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+    
+    // Only fetch quizzes created by this admin
+    const quizzes = await Quiz.find({ createdBy: admin._id }).select('-questions.correctAnswerIndex');
     return NextResponse.json({ success: true, data: quizzes });
   } catch {
     return NextResponse.json(
@@ -75,4 +96,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

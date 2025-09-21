@@ -16,7 +16,7 @@ export interface IQuiz extends Document {
   createdBy?: mongoose.Types.ObjectId;
   timeLimit?: number; // Time limit in minutes (0 or null means no time limit)
   hasTimeLimit: boolean;
-  language: string; // Language selected by the teacher (en, ar, fr)
+  language: string; // Language selected by the teacher (en, fr)
   classId?: mongoose.Types.ObjectId;
 }
 
@@ -90,7 +90,7 @@ const QuizSchema = new Schema<IQuiz>({
   language: {
     type: String,
     required: true,
-    enum: ['en', 'ar', 'fr'],
+    enum: ['en', 'fr'],
     default: 'en',
   },
   classId: {
@@ -109,4 +109,4 @@ QuizSchema.pre('save', function(next) {
   next();
 });
 
-export default mongoose.models.Quiz || mongoose.model<IQuiz>('Quiz', QuizSchema); 
+export default mongoose.models.Quiz || mongoose.model<IQuiz>('Quiz', QuizSchema);

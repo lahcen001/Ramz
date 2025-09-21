@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, BookOpen, Users, Clock, Pin, Trash2, Target, Link, Check, LogOut, Upload, FileText, Download, User, Eye, Loader2 } from 'lucide-react';
+import { Plus, BookOpen, Users, Clock, Pin, Trash2, Target, Link, Check, LogOut, Upload, FileText, Download, User, Eye, Loader2, Edit } from 'lucide-react';
 import { PageLoader } from '@/components/ui/loader';
 
 interface Quiz {
@@ -362,21 +362,13 @@ export default function AdminPage() {
         <div className="flex-1 p-4 lg:p-8 space-y-6 lg:space-y-8 overflow-y-auto">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
             <div className="lg:col-span-2 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
+              <div className="grid grid-cols-1 gap-3 lg:gap-4">
                 <Button 
                   onClick={() => router.push('/admin/create')}
                   className="h-14 lg:h-16 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-base lg:text-lg"
                 >
                   <Plus className="h-5 w-5 lg:h-6 lg:w-6 mr-2 lg:mr-3" />
                   {t('admin.dashboard.createNewQuiz')}
-                </Button>
-                
-                <Button 
-                  onClick={() => router.push('/admin/classes')}
-                  className="h-14 lg:h-16 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-base lg:text-lg"
-                >
-                  <Users className="h-5 w-5 lg:h-6 lg:w-6 mr-2 lg:mr-3" />
-                  Manage Classes
                 </Button>
               </div>
 
@@ -622,12 +614,22 @@ export default function AdminPage() {
                       </div>
 
                       <div className="space-y-2 lg:space-y-3">
-                        <div className="grid grid-cols-2 gap-2 lg:gap-3">
+                        <div className="grid grid-cols-3 gap-2 lg:gap-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => router.push(`/admin/quiz/${quiz._id}`)}
+                            className="text-sm lg:text-base h-9 lg:h-10 transition-all duration-200 hover:bg-blue-50 hover:border-blue-300"
+                          >
+                            <Edit className="h-4 w-4 lg:h-5 lg:w-5 mr-1 lg:mr-2" />
+                            Edit
+                          </Button>
+                          
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleCopyQuizLink(quiz.pin, quiz._id)}
-                            className="text-sm lg:text-base h-9 lg:h-10 transition-all duration-200 hover:bg-blue-50 hover:border-blue-300"
+                            className="text-sm lg:text-base h-9 lg:h-10 transition-all duration-200 hover:bg-green-50 hover:border-green-300"
                           >
                             {copiedQuizId === quiz._id ? (
                               <>
@@ -646,7 +648,7 @@ export default function AdminPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => router.push(`/admin/quiz/${quiz._id}/participants`)}
-                            className="text-sm lg:text-base h-9 lg:h-10 transition-all duration-200 hover:bg-green-50 hover:border-green-300"
+                            className="text-sm lg:text-base h-9 lg:h-10 transition-all duration-200 hover:bg-purple-50 hover:border-purple-300"
                           >
                             <Eye className="h-4 w-4 lg:h-5 lg:w-5 mr-1 lg:mr-2" />
                             {t('admin.dashboard.participants')}
@@ -690,4 +692,4 @@ export default function AdminPage() {
       </div>
     </div>
   );
-} 
+}

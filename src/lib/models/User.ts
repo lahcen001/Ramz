@@ -5,7 +5,7 @@ export interface IUser extends Document {
   role: 'admin' | 'user';
   email?: string;
   password?: string;
-  language?: 'en' | 'ar' | 'fr';
+  language?: 'en' | 'fr';
   adminProfile?: {
     schoolName?: string;
     teacherName?: string;
@@ -37,7 +37,7 @@ const UserSchema = new Schema<IUser>({
   },
   language: {
     type: String,
-    enum: ['en', 'ar', 'fr'],
+    enum: ['en', 'fr'],
     default: 'en',
   },
   adminProfile: {
@@ -66,4 +66,4 @@ const UserSchema = new Schema<IUser>({
   timestamps: true,
 });
 
-export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema); 
+export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema);

@@ -93,12 +93,16 @@ export default function QuizPage() {
 
     try {
       // Convert selectedAnswers to simple array format expected by backend
+      // Fill with -1 for unanswered questions
       const answers = Array(quiz.questions.length).fill(-1);
       Object.entries(selectedAnswers).forEach(([questionIndex, answerIndex]) => {
-        answers[parseInt(questionIndex)] = answerIndex;
+        const index = parseInt(questionIndex);
+        if (index >= 0 && index < quiz.questions.length) {
+          answers[index] = answerIndex;
+        }
       });
 
-      console.log('Submitting quiz with data:', { userName, answers });
+      console.log('Submitting quiz with data:', { userName, answers, selectedAnswers });
       
       const response = await fetch(`/api/quizzes/${quiz._id}/submit`, {
         method: 'POST',
@@ -129,7 +133,7 @@ export default function QuizPage() {
       }
     } catch (error) {
       console.error('Submit error:', error);
-      setError(`Network error: ${error.message}. Please try again.`);
+      setError(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -287,22 +291,32 @@ export default function QuizPage() {
                   {t('quiz.previous')}
                 </Button>
 
-                <Button
-                  onClick={handleSubmitQuiz}
-                  disabled={isSubmitting}
-                  className="flex-1 h-11 sm:h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center gap-2">
-                                              <Loader2 className="w-4 h-4 animate-spin" />
-                      {t('quiz.submitting')}
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      {t('quiz.submit')}
-                    </div>
-                  )}
-                </Button>
+                {currentQuestion < quiz.questions.length - 1 ? (
+                  <Button
+                    onClick={() => setCurrentQuestion(currentQuestion + 1)}
+                    disabled={isSubmitting || selectedAnswers[currentQuestion] === undefined}
+                    className="flex-1 h-11 sm:h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  >
+                    {t('quiz.next')}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleSubmitQuiz}
+                    disabled={isSubmitting || selectedAnswers[currentQuestion] === undefined}
+                    className="flex-1 h-11 sm-h-12 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                  >
+                    {isSubmitting ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        {t('quiz.submitting')}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        {t('quiz.submit')}
+                      </div>
+                    )}
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -325,4 +339,4 @@ export default function QuizPage() {
       </div>
     </div>
   );
-} 
+}

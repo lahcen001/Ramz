@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { PageLoader } from '@/components/ui/loader';
 import { Loader2 } from 'lucide-react';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 interface Question {
   text: string;
@@ -52,7 +53,7 @@ interface QuizForm {
 }
 
 export default function CreateQuizPage() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [quizForm, setQuizForm] = useState<QuizForm>({
     title: '',
     schoolName: '',
@@ -183,12 +184,12 @@ export default function CreateQuizPage() {
 
   const addQuestion = () => {
     if (!currentQuestion.text.trim()) {
-      setError('Question text is required');
+      setError(t('admin.create.errors.questionTextRequired'));
       return;
     }
 
     if (currentQuestion.answers.some(answer => !answer.trim())) {
-      setError('All answer options must be filled');
+      setError(t('admin.create.errors.allAnswersRequired'));
       return;
     }
 
@@ -208,12 +209,12 @@ export default function CreateQuizPage() {
   const handleSubmit = async () => {
     if (!quizForm.title.trim() || !quizForm.schoolName.trim() || 
         !quizForm.teacherName.trim() || !quizForm.major.trim()) {
-      setError('All quiz details are required');
+      setError(t('admin.create.errors.allDetailsRequired'));
       return;
     }
 
     if (questions.length === 0) {
-      setError('At least one question is required');
+      setError(t('admin.create.errors.atLeastOneQuestion'));
       return;
     }
 
@@ -251,7 +252,7 @@ export default function CreateQuizPage() {
   };
 
   if (checkingAuth) {
-    return <PageLoader text="Checking authentication..." />;
+    return <PageLoader text={t('admin.dashboard.checkingAuth')} />;
   }
 
   if (!isAuthenticated) {
@@ -271,12 +272,13 @@ export default function CreateQuizPage() {
               <Target className="h-6 w-6 text-blue-600" />
               <div>
                 <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                  Create Quiz
+                  {t('admin.create.title')}
                 </h1>
-                <p className="text-xs sm:text-sm text-gray-600">Build engaging quizzes</p>
+                <p className="text-xs sm:text-sm text-gray-600">{t('admin.create.subtitle')}</p>
               </div>
             </div>
             <div className="flex gap-2">
+              <LanguageSwitcher />
               <Button 
                 size="sm" 
                 variant="outline" 
@@ -284,7 +286,7 @@ export default function CreateQuizPage() {
                 className="h-8 sm:h-10 px-3 sm:px-4"
               >
                 <ArrowLeft className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Back</span>
+                <span className="hidden sm:inline">{t('common.back')}</span>
               </Button>
             </div>
           </div>
@@ -318,47 +320,47 @@ export default function CreateQuizPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                   <Settings className="h-5 w-5 text-blue-600" />
-                  Quiz Details
+                  {t('admin.create.quizDetails')}
                 </CardTitle>
-                <CardDescription className="text-sm">Set up your quiz information</CardDescription>
+                <CardDescription className="text-sm">{t('admin.create.basicInfo')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="title" className="text-sm font-medium">Quiz Title *</Label>
+                    <Label htmlFor="title" className="text-sm font-medium">{t('admin.create.quizTitle')} *</Label>
                     <Input
                       id="title"
-                      placeholder="Enter quiz title"
+                      placeholder={t('admin.create.quizTitlePlaceholder')}
                       value={quizForm.title}
                       onChange={(e) => handleQuizFormChange('title', e.target.value)}
                       className="h-11 sm:h-12"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="major" className="text-sm font-medium">Subject/Major *</Label>
+                    <Label htmlFor="major" className="text-sm font-medium">{t('admin.create.majorSubject')} *</Label>
                     <Input
                       id="major"
-                      placeholder="e.g., Mathematics, Physics"
+                      placeholder={t('admin.create.majorPlaceholder')}
                       value={quizForm.major}
                       onChange={(e) => handleQuizFormChange('major', e.target.value)}
                       className="h-11 sm:h-12"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="schoolName" className="text-sm font-medium">School Name</Label>
+                    <Label htmlFor="schoolName" className="text-sm font-medium">{t('admin.create.schoolName')}</Label>
                     <Input
                       id="schoolName"
-                      placeholder="School or institution name"
+                      placeholder={t('admin.create.schoolNamePlaceholder')}
                       value={quizForm.schoolName}
                       onChange={(e) => handleQuizFormChange('schoolName', e.target.value)}
                       className="h-11 sm:h-12"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="teacherName" className="text-sm font-medium">Teacher Name</Label>
+                    <Label htmlFor="teacherName" className="text-sm font-medium">{t('admin.create.teacherName')}</Label>
                     <Input
                       id="teacherName"
-                      placeholder="Your name"
+                      placeholder={t('admin.create.teacherNamePlaceholder')}
                       value={quizForm.teacherName}
                       onChange={(e) => handleQuizFormChange('teacherName', e.target.value)}
                       className="h-11 sm:h-12"
@@ -371,7 +373,7 @@ export default function CreateQuizPage() {
                   <div className="flex items-center justify-between">
                     <Label className="text-sm font-medium flex items-center gap-2">
                       <Clock className="h-4 w-4 text-blue-600" />
-                      Enable Time Limit
+                      {t('admin.create.setTimeLimit')}
                     </Label>
                     <input
                       type="checkbox"
@@ -382,7 +384,7 @@ export default function CreateQuizPage() {
                   </div>
                   {quizForm.hasTimeLimit && (
                     <div className="space-y-2">
-                      <Label htmlFor="timeLimit" className="text-sm">Time Limit (minutes)</Label>
+                      <Label htmlFor="timeLimit" className="text-sm">{t('admin.create.timeLimitMinutes')}</Label>
                       <Input
                         id="timeLimit"
                         type="number"
@@ -403,16 +405,16 @@ export default function CreateQuizPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                   <FileText className="h-5 w-5 text-green-600" />
-                  Add Question
+                  {t('admin.create.addQuestion')}
                 </CardTitle>
-                <CardDescription className="text-sm">Create questions for your quiz</CardDescription>
+                <CardDescription className="text-sm">{t('admin.create.createQuestions')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="questionText" className="text-sm font-medium">Question Text *</Label>
+                  <Label htmlFor="questionText" className="text-sm font-medium">{t('admin.create.questionText')} *</Label>
                   <Textarea
                     id="questionText"
-                    placeholder="Enter your question here..."
+                    placeholder={t('admin.create.questionPlaceholder')}
                     value={currentQuestion.text}
                     onChange={(e) => handleQuestionTextChange(e.target.value)}
                     rows={3}
@@ -422,7 +424,7 @@ export default function CreateQuizPage() {
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">Answer Options</Label>
+                    <Label className="text-sm font-medium">{t('admin.create.answerOptions')}</Label>
                     <Button
                       type="button"
                       variant="outline"
@@ -432,7 +434,7 @@ export default function CreateQuizPage() {
                       className="h-8 px-3"
                     >
                       <Plus className="h-4 w-4 mr-1" />
-                      Add Option
+                      {t('admin.create.addAnswerOption')}
                     </Button>
                   </div>
 
@@ -475,7 +477,7 @@ export default function CreateQuizPage() {
                     className="flex-1 h-11 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Question
+                    {t('admin.create.addQuestion')}
                   </Button>
                 </div>
               </CardContent>
@@ -485,11 +487,11 @@ export default function CreateQuizPage() {
             {questions.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                    <BookOpen className="h-5 w-5 text-purple-600" />
-                    Questions ({questions.length})
-                  </CardTitle>
-                  <CardDescription className="text-sm">Review and manage your quiz questions</CardDescription>
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <BookOpen className="h-5 w-5 text-purple-600" />
+                  {t('admin.create.questionsAdded', { count: questions.length })}
+                </CardTitle>
+                <CardDescription className="text-sm">{t('admin.create.reviewQuestions')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -542,12 +544,12 @@ export default function CreateQuizPage() {
                 {isSubmitting ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Creating Quiz...</span>
+                    <span>{t('admin.create.creating')}</span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <Save className="h-5 w-5 sm:h-6 sm:w-6" />
-                    Create Quiz ({questions.length} question{questions.length !== 1 ? 's' : ''})
+                    {t('admin.create.createQuizButton')} ({questions.length} {t('admin.create.questionsAdded', { count: questions.length })})
                   </div>
                 )}
               </Button>
@@ -557,4 +559,4 @@ export default function CreateQuizPage() {
       </div>
     </div>
   );
-} 
+}
