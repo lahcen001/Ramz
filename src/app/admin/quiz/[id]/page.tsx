@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Trash2, Plus, ArrowLeft, Target, Settings, FileText, BookOpen, Save, Sparkles, Clock } from 'lucide-react';
+import { Trash2, Plus, ArrowLeft, Target, Settings, FileText, Save, Sparkles, Clock } from 'lucide-react';
 import { PageLoader } from '@/components/ui/loader';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
